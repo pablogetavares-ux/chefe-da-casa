@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Folhas">
+  <rect width="400" height="267" fill="#ecfdf5"/>
+  <ellipse cx="168" cy="150" rx="34" ry="52" fill="#4ade80" transform="rotate(-18 168 150)"/>
+  <ellipse cx="232" cy="146" rx="34" ry="52" fill="#22c55e" transform="rotate(16 232 146)"/>
+  <ellipse cx="200" cy="132" rx="28" ry="44" fill="#86efac" transform="rotate(4 200 132)"/>
+</svg>

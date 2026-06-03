@@ -1,0 +1,2 @@
+-- Products + market_prices (applied via MCP: products_and_market_prices)
+-- See supabase MCP migration for full SQL.

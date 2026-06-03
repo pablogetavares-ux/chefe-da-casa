@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Ovos">
+  <rect width="400" height="267" fill="#fffbeb"/>
+  <ellipse cx="160" cy="140" rx="42" ry="54" fill="#fde68a" stroke="#f59e0b" stroke-width="3"/>
+  <ellipse cx="240" cy="136" rx="42" ry="54" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+  <ellipse cx="200" cy="118" rx="18" ry="22" fill="#fff7ed" opacity="0.65"/>
+</svg>

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["gru1"],
+  "headers": [
+    {
+      "source": "/api/webhooks/stripe",
+      "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }]
+    }
+  ],
+  "functions": {
+    "src/app/api/v1/ai/generate-recipe/route.ts": { "maxDuration": 60 },
+    "src/app/api/v1/ai/generate-recipe/stream/route.ts": { "maxDuration": 60 },
+    "src/app/api/v1/ai/scan-and-generate/route.ts": { "maxDuration": 60 },
+    "src/app/api/v1/ai/scan-ingredients/route.ts": { "maxDuration": 60 },
+    "src/app/api/v1/ai/chat/route.ts": { "maxDuration": 60 },
+    "src/app/api/v1/ai/adapt-recipe/route.ts": { "maxDuration": 60 },
+    "src/app/api/v1/ai/refine-recipe/route.ts": { "maxDuration": 60 },
+    "src/app/api/webhooks/stripe/route.ts": { "maxDuration": 30 }
+  }
+}

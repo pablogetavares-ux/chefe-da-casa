@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Chefe da Casa",
+    "slug": "chefe-da-casa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "chefdecasa",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.chefedacasa.app",
+      "permissions": ["com.android.vending.BILLING"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "react-native-purchases",
+        {
+          "androidBillingLibraryVersion": "7.0.0"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Tomate">
+  <rect width="400" height="267" fill="#fef2f2"/>
+  <circle cx="200" cy="138" r="72" fill="#ef4444"/>
+  <circle cx="176" cy="118" r="10" fill="#fecaca" opacity="0.7"/>
+  <path d="M200 66c-8 0-14 6-14 14v8h28v-8c0-8-6-14-14-14z" fill="#16a34a"/>
+  <path d="M188 58c6-10 18-10 24 0" stroke="#15803d" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

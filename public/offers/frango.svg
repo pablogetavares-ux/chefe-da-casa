@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Frango">
+  <rect width="400" height="267" fill="#fff7ed"/>
+  <ellipse cx="200" cy="145" rx="96" ry="52" fill="#fdba74" stroke="#ea580c" stroke-width="3"/>
+  <path d="M128 145c24-18 48-24 72-24s48 6 72 24" stroke="#c2410c" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

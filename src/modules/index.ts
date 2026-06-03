@@ -1,0 +1,11 @@
+export * as ai from "@/modules/ai";
+export * as chat from "@/modules/chat";
+export * as community from "@/modules/community";
+export * as favorites from "@/modules/favorites";
+export * as nutrition from "@/modules/nutrition";
+export * as offers from "@/modules/offers";
+export * as home from "@/modules/home";
+export * as pricing from "@/modules/pricing";
+export * as recipes from "@/modules/recipes";
+export * as shopping from "@/modules/shopping";
+export * as stores from "@/modules/stores";

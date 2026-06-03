@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Arroz">
+  <rect width="400" height="267" fill="#fafaf9"/>
+  <rect x="132" y="88" width="136" height="108" rx="10" fill="#ffffff" stroke="#d6d3d1" stroke-width="4"/>
+  <circle cx="168" cy="128" r="4" fill="#e7e5e4"/>
+  <circle cx="188" cy="142" r="4" fill="#e7e5e4"/>
+  <circle cx="210" cy="126" r="4" fill="#e7e5e4"/>
+  <circle cx="232" cy="148" r="4" fill="#e7e5e4"/>
+  <circle cx="248" cy="124" r="4" fill="#e7e5e4"/>
+  <circle cx="176" cy="160" r="4" fill="#e7e5e4"/>
+  <circle cx="220" cy="166" r="4" fill="#e7e5e4"/>
+</svg>

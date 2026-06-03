@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Salmão">
+  <rect width="400" height="267" fill="#fff1f2"/>
+  <ellipse cx="200" cy="140" rx="98" ry="44" fill="#fb7185" stroke="#e11d48" stroke-width="3"/>
+  <path d="M118 140c28-10 56-14 82-14s54 4 82 14" stroke="#fda4af" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <circle cx="268" cy="132" r="6" fill="#ffe4e6"/>
+</svg>

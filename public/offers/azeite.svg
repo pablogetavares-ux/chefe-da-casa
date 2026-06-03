@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 267" role="img" aria-label="Azeite">
+  <rect width="400" height="267" fill="#f0fdf4"/>
+  <rect x="168" y="72" width="64" height="18" rx="4" fill="#166534"/>
+  <path d="M152 90h96l-12 120c-2 16-18 28-36 28s-34-12-36-28L152 90z" fill="#ca8a04" stroke="#854d0e" stroke-width="3"/>
+  <ellipse cx="200" cy="168" rx="28" ry="36" fill="#eab308" opacity="0.55"/>
+</svg>

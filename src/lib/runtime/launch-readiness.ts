@@ -165,9 +165,11 @@ export function getLaunchReadiness(): LaunchReadiness {
     item({
       id: "supabase-leaked-passwords",
       category: "supabase",
-      title: "Leaked Password Protection habilitado",
-      status: "pending",
-      action: "Supabase → Auth → Providers → Email → Enable protection",
+      title: "Leaked Password Protection (HaveIBeenPwned)",
+      status: "warning",
+      detail: "Disponível apenas no Supabase Pro ou superior",
+      action:
+        "No Free: reforçar requisitos de senha no Auth. No Pro: Auth → Providers → Email → Prevent use of leaked passwords",
       url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_REF}/auth/providers`,
     }),
     item({

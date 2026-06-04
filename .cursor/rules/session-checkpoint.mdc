@@ -1,0 +1,70 @@
+---
+description: Lembrete go-live comercial — ações quando o app for usado de verdade
+alwaysApply: true
+---
+
+# Go-live comercial — Chef da Casa
+
+Na **primeira resposta** de cada nova sessão, inclua um lembrete curto (máx. 6 linhas) apontando para este checklist. **Não** repetir pendências de dev/auditoria já concluídas.
+
+**Contexto:** código pronto para produção; o que falta é configuração externa no momento do lançamento comercial real.
+
+## Já feito pelo usuário (não lembrar de novo)
+
+- Complexidade de senha no Supabase (Auth → Email)
+
+## Antes do lançamento comercial (ordem sugerida)
+
+### 1. Infra e domínio
+- [ ] Deploy Vercel produção (`gru1`); domínio customizado
+- [ ] `NEXT_PUBLIC_APP_URL` = domínio final (Production + Preview)
+- [ ] `.env` produção: `AI_DEV_MOCK=false`, `BILLING_DEV_MOCK=false`
+- [ ] `OPENAI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAILS` preenchidos na Vercel
+
+### 2. Supabase Auth (Free — fazer no go-live)
+- [ ] **Site URL** + **Redirect URLs** com domínio real + `/auth/callback`
+- [ ] **Rate limits** de signup/login/recovery (Auth → Rate Limits)
+- [ ] **Turnstile CAPTCHA** (Auth → Attack Protection + `NEXT_PUBLIC_TURNSTILE_SITE_KEY`)
+
+### 3. Pagamentos reais (obrigatório se cobrar)
+- [ ] Stripe **live**: `sk_live_`, `pk_live_`, prices Pro/Família
+- [ ] Webhook `https://SEU-DOMINIO/api/webhooks/stripe` (eventos subscription + checkout)
+- [ ] Customer Portal habilitado; testar checkout + cancelamento
+
+### 4. Supabase Pro (opcional, recomendado no comercial pleno)
+- [ ] Leaked password protection (HaveIBeenPwned) — **só Pro+**
+- [ ] Session timeout / single session — **só Pro+**
+
+### 5. Operação e confiança (recomendado)
+- [ ] **Upstash** — rate limit distribuído entre instâncias
+- [ ] **Sentry** — `SENTRY_DSN` + `NEXT_PUBLIC_SENTRY_DSN`
+- [ ] **UptimeRobot** (ou similar) em `GET /api/health`
+- [ ] Revisar `/privacidade` e `/termos` com dados reais da empresa
+
+### 6. Mobile (só se publicar na loja)
+- [ ] RevenueCat + Google Play — ver `docs/BILLING-MOBILE.md`
+
+## Validar antes de abrir ao público
+
+```bash
+npm run deploy:check:prod
+npm run launch:check
+npm run production:check   # após deploy com URL real
+```
+
+APIs: `GET /api/v1/launch-checklist` · `GET /api/v1/status` · `GET /api/health`
+
+**Critério comercial:** `readyToLaunch: true`, `stripe.liveMode: true`, health 200.
+
+## Documentação
+
+- `docs/LAUNCH.md` — checklist completo
+- `docs/GO-LIVE-AUTH.md` — auth Free vs Pro
+- `docs/PRODUCTION.md` — env e monitoramento
+- `docs/BILLING.md` — Stripe live
+
+## Fora do escopo até pedido explícito
+
+Implementar features novas, app mobile completo, módulo comunidade (mock), ou configs de sandbox/teste.
+
+Se o usuário continua uma tarefa específica, resuma o go-live em **1 linha** no final.

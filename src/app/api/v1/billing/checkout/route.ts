@@ -3,7 +3,7 @@ import { apiError, apiSuccess } from "@/lib/api/response";
 import { handleApiRouteError } from "@/lib/api/route-error";
 import { requireAuthUser } from "@/lib/api/auth";
 import { isBillingMockEnabled } from "@/lib/billing/mock";
-import { mockUpgradePlan } from "@/lib/billing/mock-upgrade";
+import { mockSetPlan } from "@/lib/billing/mock-upgrade";
 import { getOrCreateStripeCustomer } from "@/lib/billing/customer";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import { planTierFromPlanId, stripePriceIdForPlan } from "@/lib/stripe/config";
@@ -20,11 +20,19 @@ export async function POST(request: Request) {
     }
 
     if (isBillingMockEnabled()) {
-      await mockUpgradePlan(user.id, parsed.data.planId);
+      await mockSetPlan(user.id, parsed.data.planId);
       return apiSuccess({
         url: `${siteConfig.url}/app/profile?billing=mock-success`,
         mock: true,
       });
+    }
+
+    if (parsed.data.planId === "free") {
+      return apiError(
+        "Plano gratuito já está disponível no cadastro",
+        400,
+        "FREE_PLAN",
+      );
     }
 
     if (!isStripeConfigured()) {

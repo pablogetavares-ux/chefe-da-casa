@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { PlanId } from "@/config/plans";
 import { api, type PlanUsageSummary } from "@/lib/api/client";
 import { isPremiumTier } from "@/lib/billing/premium";
 import {
@@ -85,7 +86,7 @@ export function useBillingCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (planId: "pro" | "family") => api.billing.checkout(planId),
+    mutationFn: (planId: PlanId) => api.billing.checkout(planId),
     onSuccess: (data) => {
       if (data.mock) {
         invalidateKeys(queryClient, [

@@ -81,8 +81,13 @@ function SignupFormContent({
       <form action={formAction}>
         <CardContent className="space-y-4">
           {state.error && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {state.error}
+            <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              <p>{state.error}</p>
+              {state.errorCode === "existing_account" ? (
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link href={loginHref}>Ir para Entrar</Link>
+                </Button>
+              ) : null}
             </div>
           )}
           {state.success && (

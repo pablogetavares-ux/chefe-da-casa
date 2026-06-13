@@ -23,6 +23,7 @@ import type {
   ShoppingListItemInput,
   ShoppingListItemUpdateInput,
 } from "@/lib/validations";
+import type { PlanId } from "@/config/plans";
 import type { BillingHealth } from "@/lib/billing/subscription-state";
 import {
   ApiClientError,
@@ -502,7 +503,7 @@ export const api = {
     subscription: () =>
       fetchApi<BillingSubscriptionResponse>("/api/v1/billing/subscription"),
     planUsage: () => fetchApi<PlanUsageSummary>("/api/v1/billing/plan-usage"),
-    checkout: (planId: "pro" | "family") =>
+    checkout: (planId: PlanId) =>
       fetchApi<BillingUrlResponse>("/api/v1/billing/checkout", {
         method: "POST",
         body: JSON.stringify({ planId }),

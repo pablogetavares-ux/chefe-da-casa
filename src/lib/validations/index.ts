@@ -361,7 +361,7 @@ export const scanAndGenerateSchema = scanImageBaseSchema
   });
 
 export const billingCheckoutSchema = z.object({
-  planId: z.enum(["pro", "family"]),
+  planId: z.enum(["free", "pro", "family"]),
 });
 
 export const antiWasteGenerateSchema = z.object({

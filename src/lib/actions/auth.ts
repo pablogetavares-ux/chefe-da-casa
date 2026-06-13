@@ -5,6 +5,11 @@ import { redirect } from "next/navigation";
 
 import { translateAuthError } from "@/lib/auth/errors";
 import {
+  EXISTING_ACCOUNT_SIGNUP_CODE,
+  EXISTING_ACCOUNT_SIGNUP_MESSAGE,
+  classifySignupOutcome,
+} from "@/lib/auth/signup-outcome";
+import {
   captchaAuthOptions,
   readCaptchaToken,
   validateCaptchaToken,
@@ -25,6 +30,7 @@ import {
 export type AuthActionState = {
   error?: string;
   success?: string;
+  errorCode?: "existing_account";
 };
 
 function readRedirectTarget(formData: FormData) {
@@ -85,6 +91,16 @@ export async function signupAction(
 
   const redirectTo = readRedirectTarget(formData);
   const supabase = await createClient();
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  if (currentUser) {
+    revalidatePath("/app", "layout");
+    redirect(redirectTo);
+  }
+
   const captchaOptions = captchaAuthOptions(captchaToken);
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -95,41 +111,28 @@ export async function signupAction(
     },
   });
 
-  if (error) {
-    return {
-      error: translateAuthError(error.message, error.code),
-    };
+  const outcome = classifySignupOutcome({ data, error });
+
+  switch (outcome.kind) {
+    case "existing_account":
+      return {
+        error: EXISTING_ACCOUNT_SIGNUP_MESSAGE,
+        errorCode: EXISTING_ACCOUNT_SIGNUP_CODE,
+      };
+    case "provider_error":
+      return {
+        error: translateAuthError(outcome.message, outcome.code),
+      };
+    case "new_with_session":
+      revalidatePath("/app", "layout");
+      redirect(redirectTo);
+      break;
+    case "new_pending_confirmation":
+      return {
+        success:
+          "Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.",
+      };
   }
-
-  if (data.session) {
-    revalidatePath("/app", "layout");
-    redirect(redirectTo);
-  }
-
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: captchaAuthOptions(captchaToken),
-  });
-
-  if (!signInError) {
-    revalidatePath("/app", "layout");
-    redirect(redirectTo);
-  }
-
-  if (
-    signInError.message.toLowerCase().includes("email not confirmed") ||
-    signInError.code === "email_not_confirmed"
-  ) {
-    return {
-      success:
-        "Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.",
-    };
-  }
-
-  return {
-    error: translateAuthError(signInError.message, signInError.code),
-  };
 }
 
 export async function forgotPasswordAction(

@@ -5,11 +5,17 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { MARKETING_LANDING } from "@/config/marketing-landing";
 import { siteConfig } from "@/config/site";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 const anchorLinks = MARKETING_LANDING.nav;
 
-export function MarketingHeader() {
+export async function MarketingHeader() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-14 items-center justify-between gap-3 px-4 sm:h-16">
@@ -40,17 +46,31 @@ export function MarketingHeader() {
             ))}
           </div>
           <ThemeToggle />
-          <Link href="/login">
-            <Button size="sm" variant="ghost" className="hidden sm:inline-flex">
-              Entrar
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button size="sm" className="ml-0.5 shrink-0 shadow-sm sm:ml-1">
-              <span className="hidden sm:inline">Começar grátis</span>
-              <span className="sm:hidden">Começar</span>
-            </Button>
-          </Link>
+          {user ? (
+            <Link href="/app">
+              <Button size="sm" className="shrink-0 shadow-sm">
+                Abrir app
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="hidden sm:inline-flex"
+                >
+                  Entrar
+                </Button>
+              </Link>
+              <Link href="/signup">
+                <Button size="sm" className="ml-0.5 shrink-0 shadow-sm sm:ml-1">
+                  <span className="hidden sm:inline">Começar grátis</span>
+                  <span className="sm:hidden">Começar</span>
+                </Button>
+              </Link>
+            </>
+          )}
         </nav>
       </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 
+import { PlanSelectButton } from "@/components/features/marketing/plan-select-button";
 import { FadeInView } from "@/components/shared/motion";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,19 @@ import { cn } from "@/lib/utils";
 
 const planOrder: PlanId[] = ["free", "pro", "family"];
 
-function PlanPreviewCard({ planId }: { planId: PlanId }) {
+type PlanPreviewCardProps = {
+  planId: PlanId;
+  isCurrent?: boolean;
+  isAuthenticated: boolean;
+  billingAvailable: boolean;
+};
+
+function PlanPreviewCard({
+  planId,
+  isCurrent = false,
+  isAuthenticated,
+  billingAvailable,
+}: PlanPreviewCardProps) {
   const plan = PLANS[planId];
   const marketing = PLAN_MARKETING[planId];
   const isPro = planId === "pro";
@@ -41,6 +54,14 @@ function PlanPreviewCard({ planId }: { planId: PlanId }) {
           )}
         >
           {marketing.highlight}
+        </Badge>
+      ) : null}
+      {isCurrent ? (
+        <Badge
+          variant="secondary"
+          className="absolute -top-3 right-4 sm:right-6"
+        >
+          Seu plano
         </Badge>
       ) : null}
 
@@ -66,11 +87,27 @@ function PlanPreviewCard({ planId }: { planId: PlanId }) {
           </li>
         ))}
       </ul>
+
+      <PlanSelectButton
+        planId={planId}
+        isAuthenticated={isAuthenticated}
+        isCurrent={isCurrent}
+        billingAvailable={billingAvailable}
+        className="mt-6"
+      />
     </article>
   );
 }
 
-export function LandingPlansSection() {
+export function LandingPlansSection({
+  currentPlanId = null,
+  isAuthenticated = false,
+  billingAvailable = false,
+}: {
+  currentPlanId?: PlanId | null;
+  isAuthenticated?: boolean;
+  billingAvailable?: boolean;
+}) {
   return (
     <section id="planos" className="scroll-mt-24 border-t py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -82,10 +119,24 @@ export function LandingPlansSection() {
           />
         </FadeInView>
 
+        {billingAvailable && isAuthenticated ? (
+          <FadeInView delay={0.15} className="mb-6 text-center">
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              Modo demonstração: escolha qualquer plano abaixo sem cobrança
+              real.
+            </p>
+          </FadeInView>
+        ) : null}
+
         <div className="grid gap-5 md:grid-cols-3 md:gap-6">
           {planOrder.map((planId, i) => (
             <FadeInView key={planId} delay={i * 0.07}>
-              <PlanPreviewCard planId={planId} />
+              <PlanPreviewCard
+                planId={planId}
+                isCurrent={currentPlanId === planId}
+                isAuthenticated={isAuthenticated}
+                billingAvailable={billingAvailable}
+              />
             </FadeInView>
           ))}
         </div>

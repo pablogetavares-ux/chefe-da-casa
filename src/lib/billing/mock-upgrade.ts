@@ -1,3 +1,4 @@
+import { planIdToTier, type PlanId } from "@/config/plans";
 import { isBillingMockEnabled } from "@/lib/billing/mock";
 import { logPlanChange } from "@/lib/billing/audit";
 import { planTierFromPlanId, type PaidPlanId } from "@/lib/stripe/config";
@@ -6,7 +7,7 @@ import {
   isAdminClientConfigured,
 } from "@/lib/supabase/admin";
 
-export async function mockUpgradePlan(userId: string, planId: PaidPlanId) {
+export async function mockSetPlan(userId: string, planId: PlanId) {
   if (!isBillingMockEnabled()) {
     throw new Error("Mock billing não habilitado");
   }
@@ -16,7 +17,7 @@ export async function mockUpgradePlan(userId: string, planId: PaidPlanId) {
   }
 
   const admin = createAdminClient();
-  const planTier = planTierFromPlanId(planId);
+  const planTier = planIdToTier(planId);
 
   const { data: profile } = await admin
     .from("profiles")
@@ -44,4 +45,8 @@ export async function mockUpgradePlan(userId: string, planId: PaidPlanId) {
   );
 
   return { plan: planTier, userId };
+}
+
+export async function mockUpgradePlan(userId: string, planId: PaidPlanId) {
+  return mockSetPlan(userId, planId);
 }

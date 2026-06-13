@@ -65,8 +65,21 @@ export type Plan = (typeof PLANS)[PlanId];
 
 /** Rótulo amigável para enum/tier vindo do banco (FREE, pro, etc.). */
 export function formatPlanDisplayName(plan: string): string {
-  const key = plan.toLowerCase() as PlanId;
+  const key = planTierToPlanId(plan);
   return PLANS[key]?.name ?? plan;
+}
+
+/** Converte tier do perfil (FREE, PRO, FAMILY) para id de marketing. */
+export function planTierToPlanId(plan: string): PlanId {
+  const key = plan.trim().toLowerCase() as PlanId;
+  return key in PLANS ? key : "free";
+}
+
+/** Converte id de marketing para tier persistido no perfil. */
+export function planIdToTier(planId: PlanId): "FREE" | "PRO" | "FAMILY" {
+  if (planId === "pro") return "PRO";
+  if (planId === "family") return "FAMILY";
+  return "FREE";
 }
 
 const BRAZIL_TZ = "America/Sao_Paulo";

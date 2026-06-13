@@ -2,11 +2,10 @@ import { isBillingConfigured as isStripeBillingConfigured } from "@/lib/stripe/c
 import { isStripeConfigured } from "@/lib/stripe/client";
 
 export function isBillingMockEnabled() {
-  if (process.env.NODE_ENV === "production") return false;
-  if (isStripeConfigured()) return false;
-
   if (process.env.BILLING_DEV_MOCK === "false") return false;
   if (process.env.BILLING_DEV_MOCK === "true") return true;
+  if (process.env.NODE_ENV === "production") return false;
+  if (isStripeConfigured()) return false;
   return process.env.NODE_ENV === "development";
 }
 

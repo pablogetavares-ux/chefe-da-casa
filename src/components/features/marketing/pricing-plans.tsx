@@ -1,47 +1,41 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 
+import { PlanSelectButton } from "@/components/features/marketing/plan-select-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { OFFERS_MARKETING } from "@/config/offers-experience";
 import { PLAN_MARKETING, formatPlanPrice } from "@/config/marketing-plans";
 import { PLANS, type PlanId } from "@/config/plans";
-import { useBillingCheckout } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
 
 type PricingPlansProps = {
   isAuthenticated: boolean;
+  currentPlanId?: PlanId;
+  billingAvailable?: boolean;
 };
 
-export function PricingPlans({ isAuthenticated }: PricingPlansProps) {
-  const router = useRouter();
-  const checkout = useBillingCheckout();
-
-  const handlePlanClick = (planId: PlanId) => {
-    if (planId === "free") return;
-
-    if (!isAuthenticated) {
-      router.push("/signup");
-      return;
-    }
-
-    checkout.mutate(planId);
-  };
-
+export function PricingPlans({
+  isAuthenticated,
+  currentPlanId = "free",
+  billingAvailable = false,
+}: PricingPlansProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <p className="text-center text-sm leading-relaxed text-muted-foreground">
         {OFFERS_MARKETING.shortDescription} {OFFERS_MARKETING.compareNote}
       </p>
+      {billingAvailable && isAuthenticated ? (
+        <p className="text-center text-xs text-muted-foreground">
+          Modo demonstração: escolha qualquer plano sem cobrança real.
+        </p>
+      ) : null}
       <div className="grid gap-5 md:grid-cols-3 md:gap-6">
         {(Object.keys(PLANS) as PlanId[]).map((planId) => {
           const plan = PLANS[planId];
           const marketing = PLAN_MARKETING[planId];
           const isPro = planId === "pro";
-          const isPending = checkout.isPending;
+          const isCurrent = isAuthenticated && currentPlanId === planId;
 
           return (
             <div
@@ -56,6 +50,14 @@ export function PricingPlans({ isAuthenticated }: PricingPlansProps) {
               {marketing.highlight ? (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
                   {marketing.highlight}
+                </Badge>
+              ) : null}
+              {isCurrent ? (
+                <Badge
+                  variant="secondary"
+                  className="absolute -top-3 right-4 sm:right-6"
+                >
+                  Seu plano
                 </Badge>
               ) : null}
 
@@ -83,29 +85,12 @@ export function PricingPlans({ isAuthenticated }: PricingPlansProps) {
                 ))}
               </ul>
 
-              {plan.id === "free" ? (
-                <Link
-                  href={isAuthenticated ? "/app" : "/signup"}
-                  className="mt-8 block"
-                >
-                  <Button className="min-h-11 w-full" variant="outline">
-                    {isAuthenticated ? "Plano atual" : "Começar grátis"}
-                  </Button>
-                </Link>
-              ) : (
-                <Button
-                  className="mt-8 min-h-11 w-full"
-                  variant={isPro ? "default" : "outline"}
-                  disabled={isPending}
-                  onClick={() => handlePlanClick(plan.id)}
-                >
-                  {isPending
-                    ? "Redirecionando..."
-                    : isAuthenticated
-                      ? "Assinar"
-                      : "Criar conta e assinar"}
-                </Button>
-              )}
+              <PlanSelectButton
+                planId={planId}
+                isAuthenticated={isAuthenticated}
+                isCurrent={isCurrent}
+                billingAvailable={billingAvailable}
+              />
             </div>
           );
         })}

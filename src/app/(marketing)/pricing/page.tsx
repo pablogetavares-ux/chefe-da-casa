@@ -5,7 +5,9 @@ import { PricingPageJsonLd } from "@/components/shared/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { MARKETING_PLANS_SECTION } from "@/config/marketing-plans";
 import { PRICING_SEO } from "@/config/marketing-seo";
+import { planTierToPlanId } from "@/config/plans";
 import { siteConfig } from "@/config/site";
+import { isBillingAvailable } from "@/lib/billing/mock";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -28,6 +30,16 @@ export default async function PricingPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let currentPlanId = planTierToPlanId("FREE");
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .single();
+    currentPlanId = planTierToPlanId(profile?.plan ?? "FREE");
+  }
+
   return (
     <section className="container mx-auto px-4 py-16 md:py-24">
       <PricingPageJsonLd />
@@ -43,7 +55,11 @@ export default async function PricingPage() {
         </p>
       </div>
 
-      <PricingPlans isAuthenticated={Boolean(user)} />
+      <PricingPlans
+        isAuthenticated={Boolean(user)}
+        currentPlanId={currentPlanId}
+        billingAvailable={isBillingAvailable()}
+      />
 
       <p className="mx-auto mt-10 max-w-xl text-center text-xs text-muted-foreground">
         {MARKETING_PLANS_SECTION.footnote}

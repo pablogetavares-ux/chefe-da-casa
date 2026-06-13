@@ -10,7 +10,10 @@ import { ResourcesSection } from "@/components/features/marketing/resources-sect
 import { FaqPageJsonLd, HomePageJsonLd } from "@/components/shared/json-ld";
 import { PanelSkeleton } from "@/components/shared/panel-skeleton";
 import { LANDING_SEO } from "@/config/marketing-seo";
+import { planTierToPlanId } from "@/config/plans";
 import { siteConfig } from "@/config/site";
+import { isBillingAvailable } from "@/lib/billing/mock";
+import { createClient } from "@/lib/supabase/server";
 
 const FaqSection = dynamic(
   () =>
@@ -42,7 +45,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let currentPlanId = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .single();
+    currentPlanId = planTierToPlanId(profile?.plan ?? "FREE");
+  }
+
   return (
     <>
       <HomePageJsonLd />
@@ -51,7 +69,11 @@ export default function HomePage() {
       <BenefitsSection />
       <ResourcesSection />
       <OffersHubSection />
-      <LandingPlansSection />
+      <LandingPlansSection
+        currentPlanId={currentPlanId}
+        isAuthenticated={Boolean(user)}
+        billingAvailable={isBillingAvailable()}
+      />
       <FaqSection />
       <FinalCtaSection />
     </>

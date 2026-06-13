@@ -134,7 +134,7 @@ try {
   warn("Não foi possível pingar Supabase");
 }
 
-console.log("\n=== Fase 1 — Checklist Chef da Casa AI ===\n");
+console.log("\n=== Fase 1 — Checklist Chefe da Casa ===\n");
 
 if (ok.length) {
   console.log("✅ OK:");

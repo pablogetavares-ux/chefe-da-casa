@@ -1,13 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-import { AppNavSkeleton } from "./app-nav-skeleton";
-
-const AppNav = dynamic(() => import("./app-nav").then((mod) => mod.AppNav), {
-  ssr: false,
-  loading: () => <AppNavSkeleton />,
-});
+import { AppNav } from "./app-nav";
 
 type AppNavClientProps = {
   userName?: string | null;
@@ -17,6 +10,7 @@ type AppNavClientProps = {
   logoutAction: () => Promise<void>;
 };
 
+/** Renderiza navegação no SSR com dados do perfil — evita flash do skeleton client-only. */
 export function AppNavClient(props: AppNavClientProps) {
   return <AppNav {...props} />;
 }

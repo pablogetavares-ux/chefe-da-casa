@@ -1,5 +1,6 @@
 import { requireAuthUser } from "@/lib/api/auth";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { handleApiRouteError } from "@/lib/api/route-error";
 import { isAdminEmail } from "@/lib/auth/admin";
 import { getLaunchReadiness } from "@/lib/runtime/launch-readiness";
 
@@ -19,9 +20,6 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    return apiError(
-      error instanceof Error ? error.message : "Erro ao gerar checklist",
-      500,
-    );
+    return handleApiRouteError(error, "GET /api/v1/launch-checklist");
   }
 }

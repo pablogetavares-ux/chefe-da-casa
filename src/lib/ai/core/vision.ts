@@ -1,6 +1,7 @@
 import type { z } from "zod";
 
 import { AI_CONFIG, getOpenAIClient } from "@/lib/ai/client";
+import { createOpenAiAbortSignal } from "@/lib/ai/core/openai-timeout";
 import { withRetry } from "@/lib/ai/core/retry";
 import type { StructuredCompletionResult } from "@/lib/ai/core/completion";
 
@@ -29,28 +30,31 @@ export async function createVisionStructuredCompletion<T extends z.ZodType>(
   const startedAt = Date.now();
 
   const completion = await withRetry(() =>
-    client.chat.completions.create({
-      model: AI_CONFIG.visionModel,
-      temperature: params.temperature ?? 0.4,
-      max_tokens: params.maxTokens ?? 2048,
-      messages: [
-        { role: "system", content: params.system },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: params.userText },
-            {
-              type: "image_url",
-              image_url: { url: params.imageUrl, detail: "auto" },
-            },
-          ],
+    client.chat.completions.create(
+      {
+        model: AI_CONFIG.visionModel,
+        temperature: params.temperature ?? 0.4,
+        max_tokens: params.maxTokens ?? 2048,
+        messages: [
+          { role: "system", content: params.system },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: params.userText },
+              {
+                type: "image_url",
+                image_url: { url: params.imageUrl, detail: "auto" },
+              },
+            ],
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: params.schema,
         },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: params.schema,
       },
-    }),
+      { signal: createOpenAiAbortSignal() },
+    ),
   );
 
   const content = completion.choices[0]?.message?.content;
@@ -58,7 +62,14 @@ export async function createVisionStructuredCompletion<T extends z.ZodType>(
     throw new Error("OPENAI_EMPTY_RESPONSE");
   }
 
-  const parsed = params.zodSchema.safeParse(JSON.parse(content));
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(content);
+  } catch {
+    throw new Error("OPENAI_INVALID_RESPONSE");
+  }
+
+  const parsed = params.zodSchema.safeParse(parsedJson);
   if (!parsed.success) {
     throw new Error("OPENAI_INVALID_RESPONSE");
   }

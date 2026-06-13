@@ -5,7 +5,7 @@ describe("getProductionReadiness", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://app.example.com");
-    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Chef da Casa AI");
+    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Chefe da Casa");
   });
 
   afterEach(() => {

@@ -1,4 +1,4 @@
-# Autenticação — Chef da Casa AI
+# Autenticação — Chefe da Casa
 
 Supabase Auth + Next.js App Router (`@supabase/ssr`).
 

@@ -1,5 +1,5 @@
 /**
- * Sincroniza o repo e inicia o dev server em C:\dev\chef-da-casa.
+ * Sincroniza o repo e inicia o dev server em C:\dev\chefe-da-casa.
  * Chamado por `npm run dev` quando o projeto está no OneDrive.
  */
 import { spawn } from "node:child_process";
@@ -8,7 +8,10 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const target = process.env.CHEF_DEV_LOCAL_PATH ?? "C:\\dev\\chef-da-casa";
+const target =
+  process.env.CHEFE_DEV_LOCAL_PATH ??
+  process.env.CHEF_DEV_LOCAL_PATH ??
+  "C:\\dev\\chefe-da-casa";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const syncScript = resolve(__dirname, "sync-to-dev.mjs");
@@ -35,7 +38,11 @@ const child = spawn("npm", ["run", "dev:here"], {
   cwd: target,
   stdio: "inherit",
   shell: true,
-  env: { ...process.env, CHEF_DEV_IN_LOCAL: "1" },
+  env: {
+    ...process.env,
+    CHEFE_DEV_IN_LOCAL: "1",
+    CHEF_DEV_IN_LOCAL: "1",
+  },
 });
 
 child.on("exit", (code) => process.exit(code ?? 0));

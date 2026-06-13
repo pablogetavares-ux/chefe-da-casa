@@ -9,6 +9,11 @@ export const RECIPE_GENERATION_MODES = [
 
 export type RecipeGenerationMode = (typeof RECIPE_GENERATION_MODES)[number];
 
+export const PREMIUM_RECIPE_MODES = new Set<RecipeGenerationMode>([
+  "FITNESS",
+  "LOW_CARB",
+]);
+
 export const RECIPE_MODE_LABELS: Record<
   RecipeGenerationMode,
   { label: string; description: string }

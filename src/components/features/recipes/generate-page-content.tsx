@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import { AiConfigBanner } from "@/components/features/recipes/ai-config-banner";
+import { OffersIntegrationBanner } from "@/components/shared/offers-integration-banner";
 import { PanelSkeleton } from "@/components/shared/panel-skeleton";
 
 const IngredientScannerPanel = dynamic(
@@ -36,6 +37,8 @@ export function GeneratePageContent() {
   return (
     <>
       <AiConfigBanner />
+
+      <OffersIntegrationBanner variant="compact" showRoadmap={false} />
 
       <IngredientScannerPanel
         onIngredientsDetected={(names) => setScannedIngredients(names)}

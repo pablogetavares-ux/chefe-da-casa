@@ -2,18 +2,16 @@ import {
   createAdminClient,
   isAdminClientConfigured,
 } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/observability/logger";
 import type { Database, Json } from "@/types/database";
 
 type RecordsClient = ReturnType<typeof createAdminClient>;
 
 async function getRecordsClient(): Promise<RecordsClient> {
-  if (isAdminClientConfigured()) return createAdminClient();
-  if (process.env.NODE_ENV === "production") {
+  if (!isAdminClientConfigured()) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY não configurada");
   }
-  return createClient() as unknown as RecordsClient;
+  return createAdminClient();
 }
 
 export async function insertUsageLog(
@@ -21,26 +19,32 @@ export async function insertUsageLog(
   action: string,
   metadata?: Record<string, unknown>,
 ) {
-  try {
-    const supabase = await getRecordsClient();
-    const { error } = await supabase.from("usage_logs").insert({
-      user_id: userId,
-      action,
-      metadata: (metadata ?? null) as Json | null,
-    });
-    if (error) {
-      logger.warn("usage.record_failed", {
-        userId,
-        action,
-        error: error.message,
-      });
+  if (!isAdminClientConfigured()) {
+    const message = "SUPABASE_SERVICE_ROLE_KEY não configurada";
+    if (process.env.NODE_ENV === "production") {
+      logger.error("usage.record_failed", { userId, action, reason: message });
+      throw new Error(message);
     }
-  } catch (error) {
-    logger.warn("usage.record_exception", {
+    logger.warn("usage.record_skipped", { userId, action, reason: message });
+    return;
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("usage_logs").insert({
+    user_id: userId,
+    action,
+    metadata: (metadata ?? null) as Json | null,
+  });
+
+  if (error) {
+    logger.error("usage.record_failed", {
       userId,
       action,
-      message: error instanceof Error ? error.message : String(error),
+      error: error.message,
     });
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(error.message);
+    }
   }
 }
 

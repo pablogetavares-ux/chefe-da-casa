@@ -12,7 +12,7 @@ concurrency:
 env:
   DEPLOY_CHECK_MODE: ci
   NEXT_PUBLIC_APP_URL: http://localhost:3000
-  NEXT_PUBLIC_APP_NAME: Chef da Casa AI
+  NEXT_PUBLIC_APP_NAME: Chefe da Casa
   NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key-for-ci
   AI_DEV_MOCK: "true"

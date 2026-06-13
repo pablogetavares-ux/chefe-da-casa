@@ -1,5 +1,5 @@
 {
-  "name": "chef-da-casa-ai",
+  "name": "chefe-da-casa",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -51,6 +51,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test --project=public",
     "test:e2e:public": "playwright test e2e/public.spec.ts",
+    "test:e2e:moto-g75": "playwright test --project=moto-g75",
     "prepare": "husky"
   },
   "lint-staged": {

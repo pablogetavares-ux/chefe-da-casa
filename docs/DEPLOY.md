@@ -1,6 +1,6 @@
 # Deploy — Vercel
 
-Guia para colocar o **Chef da Casa AI** em produção na Vercel, integrado com Supabase (sa-east-1) e Stripe.
+Guia para colocar o **Chefe da Casa** em produção na Vercel, integrado com Supabase (sa-east-1) e Stripe.
 
 ## Pré-requisitos
 
@@ -55,26 +55,26 @@ Endpoints de diagnóstico:
 
 Configure para **Production** (e **Preview** se quiser PRs funcionando):
 
-| Variável                        | Obrigatória | Escopo     | Notas                                            |
-| ------------------------------- | ----------- | ---------- | ------------------------------------------------ |
-| `NEXT_PUBLIC_APP_URL`           | ✅          | Production | URL final, ex: `https://chef-da-casa.vercel.app` |
-| `NEXT_PUBLIC_APP_NAME`          | —           | All        | `Chef da Casa AI`                                |
-| `NEXT_PUBLIC_SUPABASE_URL`      | ✅          | All        | Dashboard Supabase → Settings → API              |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅          | All        | Chave **anon/public**                            |
-| `SUPABASE_SERVICE_ROLE_KEY`     | ✅\*        | Production | Webhooks Stripe; **nunca** expor no client       |
-| `OPENAI_API_KEY`                | ✅\*        | Production | Geração de receitas IA                           |
-| `OPENAI_MODEL`                  | —           | All        | Default: `gpt-4o-mini`                           |
-| `STRIPE_SECRET_KEY`             | Billing     | Production | `sk_live_...` ou `sk_test_...`                   |
-| `STRIPE_WEBHOOK_SECRET`         | Billing     | Production | Do endpoint webhook Stripe                       |
-| `STRIPE_PRICE_PRO`              | Billing     | Production | `price_...`                                      |
-| `STRIPE_PRICE_FAMILY`           | Billing     | Production | `price_...`                                      |
-| `ADMIN_EMAILS`                  | Produção    | Production | E-mails admin separados por vírgula              |
-| `BILLING_DEV_MOCK`              | —           | Production | `false` em produção                              |
-| `AI_DEV_MOCK`                   | —           | Production | `false` em produção                              |
-| `UPSTASH_REDIS_REST_URL`        | Recom.      | Production | Rate limit distribuído                           |
-| `UPSTASH_REDIS_REST_TOKEN`      | Recom.      | Production | Par do Upstash                                   |
-| `SENTRY_DSN`                    | Opcional    | Production | Erros server-side                                |
-| `NEXT_PUBLIC_SENTRY_DSN`        | Opcional    | All        | Erros client-side (mesmo DSN Sentry)             |
+| Variável                        | Obrigatória | Escopo     | Notas                                             |
+| ------------------------------- | ----------- | ---------- | ------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`           | ✅          | Production | URL final, ex: `https://chefe-da-casa.vercel.app` |
+| `NEXT_PUBLIC_APP_NAME`          | —           | All        | `Chefe da Casa`                                   |
+| `NEXT_PUBLIC_SUPABASE_URL`      | ✅          | All        | Dashboard Supabase → Settings → API               |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅          | All        | Chave **anon/public**                             |
+| `SUPABASE_SERVICE_ROLE_KEY`     | ✅\*        | Production | Webhooks Stripe; **nunca** expor no client        |
+| `OPENAI_API_KEY`                | ✅\*        | Production | Geração de receitas IA                            |
+| `OPENAI_MODEL`                  | —           | All        | Default: `gpt-4o-mini`                            |
+| `STRIPE_SECRET_KEY`             | Billing     | Production | `sk_live_...` ou `sk_test_...`                    |
+| `STRIPE_WEBHOOK_SECRET`         | Billing     | Production | Do endpoint webhook Stripe                        |
+| `STRIPE_PRICE_PRO`              | Billing     | Production | `price_...`                                       |
+| `STRIPE_PRICE_FAMILY`           | Billing     | Production | `price_...`                                       |
+| `ADMIN_EMAILS`                  | Produção    | Production | E-mails admin separados por vírgula               |
+| `BILLING_DEV_MOCK`              | —           | Production | `false` em produção                               |
+| `AI_DEV_MOCK`                   | —           | Production | `false` em produção                               |
+| `UPSTASH_REDIS_REST_URL`        | Recom.      | Production | Rate limit distribuído                            |
+| `UPSTASH_REDIS_REST_TOKEN`      | Recom.      | Production | Par do Upstash                                    |
+| `SENTRY_DSN`                    | Opcional    | Production | Erros server-side                                 |
+| `NEXT_PUBLIC_SENTRY_DSN`        | Opcional    | All        | Erros client-side (mesmo DSN Sentry)              |
 
 \* Obrigatória para funcionalidade completa; build passa sem OpenAI/Stripe.
 

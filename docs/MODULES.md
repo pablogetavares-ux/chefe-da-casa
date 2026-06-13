@@ -1,4 +1,4 @@
-# Arquitetura modular — Chef da Casa AI
+# Arquitetura modular — Chefe da Casa
 
 > Next.js 16 (web SaaS). **Não** é React Native — mobile nativo seria projeto separado ou Expo Router com código compartilhado em `packages/`.
 

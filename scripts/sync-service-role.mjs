@@ -36,7 +36,7 @@ function upsertEnv(key, value) {
   writeFileSync(envPath, content, "utf8");
 }
 
-console.log("Chef da Casa AI — sync service role\n");
+console.log("Chefe da Casa — sync service role\n");
 
 try {
   const keys = getApiKeys();

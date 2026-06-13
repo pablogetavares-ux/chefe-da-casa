@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorFallback } from "@/components/shared/error-fallback";
 import {
   AnimatedPage,
   FadeIn,
@@ -10,6 +11,7 @@ import {
   StaggerList,
 } from "@/components/shared/motion";
 import { Button } from "@/components/ui/button";
+import { OffersIntegrationBanner } from "@/components/shared/offers-integration-banner";
 import { HomeChatResume } from "@/modules/home/components/home-chat-resume";
 import { HomeHero } from "@/modules/home/components/home-hero";
 import { HomeOffersStrip } from "@/modules/home/components/home-offers-strip";
@@ -58,11 +60,19 @@ function RecipeCarousel({
 }
 
 export function HomePremiumPanel({ initialData }: HomePremiumPanelProps) {
-  const { data } = useHomeFeed(undefined, initialData);
+  const { data, isError, error, refetch } = useHomeFeed(undefined, initialData);
   const feed = data ?? initialData;
 
   return (
     <AnimatedPage className="space-y-8">
+      {isError && (
+        <ErrorFallback
+          compact
+          title="Não foi possível atualizar a home"
+          message={error?.message ?? "Verifique sua conexão e tente novamente."}
+          reset={() => void refetch()}
+        />
+      )}
       <FadeIn>
         <HomeHero greeting={feed.greeting} stats={feed.stats} />
       </FadeIn>
@@ -79,6 +89,10 @@ export function HomePremiumPanel({ initialData }: HomePremiumPanelProps) {
         <HomeSection title="Atalhos rápidos">
           <HomeQuickActions />
         </HomeSection>
+      </FadeIn>
+
+      <FadeIn delay={0.09}>
+        <OffersIntegrationBanner variant="compact" />
       </FadeIn>
 
       <StaggerList className="space-y-8">
@@ -108,7 +122,7 @@ export function HomePremiumPanel({ initialData }: HomePremiumPanelProps) {
 
             <HomeSection
               title="Promoções próximas"
-              description={`Ofertas em ${feed.city}`}
+              description={`Personalizadas para você em ${feed.city}`}
               href="/app/offers"
             >
               <HomeOffersStrip offers={feed.nearbyOffers} city={feed.city} />
@@ -151,9 +165,9 @@ export function HomePremiumPanel({ initialData }: HomePremiumPanelProps) {
         <StaggerItem>
           <HomeSection
             title="Receitas econômicas"
-            description="Rápidas, fáceis e leves no bolso"
-            href="/app/compare?mode=basket"
-            actionLabel="Comparar cesta"
+            description="Rápidas, fáceis e leves no bolso — veja também ofertas na região"
+            href="/app/offers"
+            actionLabel="Ver ofertas"
           >
             <RecipeCarousel
               recipes={feed.economicalRecipes}

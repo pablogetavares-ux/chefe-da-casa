@@ -1,11 +1,11 @@
 /**
- * Tokens de design do Chef da Casa AI.
+ * Tokens de design do Chefe da Casa.
  * Cores em OKLCH — aplicadas em globals.css via CSS variables.
  */
 export const themeConfig = {
   /** Identidade visual */
   brand: {
-    name: "Chef da Casa",
+    name: "Chefe da Casa",
     tagline: "Receitas saudáveis com o que você tem em casa",
   },
 

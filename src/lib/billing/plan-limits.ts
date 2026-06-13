@@ -2,6 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getMonthStartIso } from "@/lib/utils/date";
 import { getPlanLimits, isUnlimited } from "@/lib/billing/plan-limits-core";
 
+/** PENDING recentes reservam slot de quota; mais antigos não bloqueiam indefinidamente. */
+const PENDING_QUOTA_WINDOW_MS = 15 * 60 * 1000;
+
+function pendingQuotaCutoffIso() {
+  return new Date(Date.now() - PENDING_QUOTA_WINDOW_MS).toISOString();
+}
+
 export {
   getPlanLimits,
   isUnlimited,
@@ -47,14 +54,26 @@ export async function getMonthlyAiUsage(
 ) {
   const supabase = supabaseClient ?? (await createClient());
   const monthStart = getMonthStartIso();
+  const pendingCutoff = pendingQuotaCutoffIso();
 
-  const [{ count: generationCount }, { count: chatCount }] = await Promise.all([
+  const [
+    { count: completedCount },
+    { count: pendingCount },
+    { count: chatCount },
+  ] = await Promise.all([
     supabase
       .from("ai_generations")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .gte("created_at", monthStart)
-      .in("status", ["COMPLETED"]),
+      .eq("status", "COMPLETED"),
+    supabase
+      .from("ai_generations")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", monthStart)
+      .eq("status", "PENDING")
+      .gte("created_at", pendingCutoff),
     supabase
       .from("usage_logs")
       .select("id", { count: "exact", head: true })
@@ -63,7 +82,7 @@ export async function getMonthlyAiUsage(
       .eq("action", "ai.chat"),
   ]);
 
-  return (generationCount ?? 0) + (chatCount ?? 0);
+  return (completedCount ?? 0) + (pendingCount ?? 0) + (chatCount ?? 0);
 }
 
 export type AiUsageSummary = {

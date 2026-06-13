@@ -58,7 +58,7 @@ function openBrowser(url) {
   }).unref();
 }
 
-console.log("\n🔑 Chef da Casa AI — configurar service_role\n");
+console.log("\n🔑 Chefe da Casa — configurar service_role\n");
 console.log("1. O navegador vai abrir em Settings → API");
 console.log(
   "2. API Keys → secret (sb_secret_...) ou Legacy → service_role (eyJ...)",

@@ -5,11 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(import.meta.url), "..", "..");
 const nextDir = resolve(root, ".next");
-const legacyLocalNext = resolve(
-  process.env.LOCALAPPDATA ?? "",
-  "chef-da-casa-ia",
-  ".next",
-);
+const legacyLocalNextPaths = [
+  resolve(process.env.LOCALAPPDATA ?? "", "chefe-da-casa-ia", ".next"),
+  resolve(process.env.LOCALAPPDATA ?? "", "chef-da-casa-ia", ".next"),
+];
 
 function sleep(ms) {
   return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
@@ -54,7 +53,9 @@ async function removeNextCache() {
   for (let attempt = 1; attempt <= 5; attempt++) {
     try {
       removePath(nextDir);
-      removePath(legacyLocalNext);
+      for (const legacyLocalNext of legacyLocalNextPaths) {
+        removePath(legacyLocalNext);
+      }
       console.log("Cache .next removido.");
       return;
     } catch (error) {

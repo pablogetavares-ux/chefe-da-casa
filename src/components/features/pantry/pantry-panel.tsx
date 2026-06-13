@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PantryOffersSection } from "@/modules/offers/components/pantry-offers-section";
 import { useCreatePantryItem, usePantryItems } from "@/hooks/use-api";
 import { getExpiryStatus } from "@/lib/utils/pantry";
 
@@ -93,6 +94,7 @@ export function PantryPanel() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: tomate, arroz, frango..."
+            aria-label="Nome do item para adicionar à despensa"
             disabled={createItem.isPending}
             className="h-11 flex-1"
           />
@@ -170,6 +172,8 @@ export function PantryPanel() {
           </div>
         )}
       </form>
+
+      <PantryOffersSection />
 
       {items && items.length > 0 ? (
         <ul className="grid gap-2">

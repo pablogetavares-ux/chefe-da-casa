@@ -1,4 +1,5 @@
-import { apiError, apiSuccess } from "@/lib/api/response";
+import { throwIfSupabaseError } from "@/lib/api/supabase-errors";
+import { apiSuccess } from "@/lib/api/response";
 import { handleApiRouteError } from "@/lib/api/route-error";
 import { requireAuthUser } from "@/lib/api/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -17,9 +18,7 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(30);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    throwIfSupabaseError(error);
 
     const items =
       data?.map((item) => {

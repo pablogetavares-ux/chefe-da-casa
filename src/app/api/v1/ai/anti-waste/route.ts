@@ -1,4 +1,5 @@
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { assertPremiumFeature } from "@/lib/billing/assert-premium";
 import { requireAuthUser } from "@/lib/api/auth";
 import {
   assertAiGenerationAllowed,
@@ -28,7 +29,8 @@ export async function POST(request: Request) {
   let generationId: string | null = null;
 
   try {
-    const user = await requireAuthUser();
+    const user = await requireAuthUser(request);
+    await assertPremiumFeature(user.id, "Modo anti-desperdício");
     ensureOpenAiConfigured();
     await assertAiRateLimit(user.id);
 

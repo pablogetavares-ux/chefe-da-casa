@@ -6,7 +6,8 @@ import { PlanLimitError } from "@/lib/billing/plan-limits";
 
 export function mapAiRouteError(error: unknown, route = "ai") {
   if (error instanceof PlanLimitError) {
-    return apiError(error.message, 429, error.code);
+    const status = error.code === "PREMIUM_REQUIRED" ? 403 : 429;
+    return apiError(error.message, status, error.code);
   }
 
   if (!(error instanceof Error)) {
@@ -45,6 +46,12 @@ export function mapAiRouteError(error: unknown, route = "ai") {
         429,
         "AI_RATE_LIMIT",
       );
+    case "AI_TIMEOUT":
+      return apiError(
+        "A geração demorou demais. Tente novamente com menos ingredientes ou mais tarde.",
+        504,
+        "AI_TIMEOUT",
+      );
     case "INVALID_IMAGE_TYPE":
       return apiError(
         "Formato de imagem inválido. Use JPEG, PNG ou WebP.",
@@ -63,12 +70,21 @@ export function mapAiRouteError(error: unknown, route = "ai") {
         422,
         "SCAN_FAILED",
       );
+    case "OPENAI_EMPTY_RESPONSE":
+    case "OPENAI_INVALID_RESPONSE":
+      return apiError(
+        "Resposta inválida da IA. Tente novamente.",
+        502,
+        "AI_INVALID_RESPONSE",
+      );
+    case "Mensagem vazia":
+      return apiError("Mensagem vazia", 400, "VALIDATION_ERROR");
     default:
       if (error.name === "ZodError") {
         return apiError("Dados inválidos", 400, "VALIDATION_ERROR");
       }
       logApiError(route, error);
-      return apiError(error.message, 500);
+      return apiError("Falha na operação de IA. Tente novamente.", 500);
   }
 }
 

@@ -12,13 +12,37 @@ test.describe("Marketing público", () => {
     const res = await request.get("/api/health");
     const body = await res.json();
     expect(body.checks?.app).toBe("ok");
-    expect(body.service).toBe("chef-da-casa-ai");
+    expect(body.service).toBe("chefe-da-casa");
+  });
+
+  test("landing exibe posicionamento principal", async ({ page }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", {
+        name: /receitas, compras e economia inteligente/i,
+      }),
+    ).toBeVisible();
+  });
+
+  test("landing possui seções principais", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#beneficios")).toBeVisible();
+    await expect(page.locator("#recursos")).toBeVisible();
+    await expect(page.locator("#central-ofertas")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /economize em toda a rotina/i }),
+    ).toBeVisible();
+    await expect(page.locator("#planos")).toBeVisible();
+    await expect(page.locator("#faq")).toBeVisible();
+    await expect(page.locator("#cta-final")).toBeVisible();
   });
 
   test("pricing exibe planos", async ({ page }) => {
     await page.goto("/pricing");
     await expect(
-      page.getByRole("heading", { name: /escolha seu plano/i }),
+      page.getByRole("heading", {
+        name: /investimento claro para a rotina/i,
+      }),
     ).toBeVisible();
   });
 });

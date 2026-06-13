@@ -1,4 +1,4 @@
-# Sequência do projeto — Chef da Casa
+# Sequência do projeto — Chefe da Casa
 
 Guia prático do que já existe e o que fazer em seguida (maio/2026).
 
@@ -13,14 +13,14 @@ Guia prático do que já existe e o que fazer em seguida (maio/2026).
 | Billing mobile (RevenueCat)            | ✅ código · ⚠️ Play + RevenueCat         |
 | Deploy / go-live                       | 📋 checklist em [LAUNCH.md](./LAUNCH.md) |
 
-**Desenvolvimento:** `C:\dev\chef-da-casa` (não OneDrive).
+**Desenvolvimento:** `C:\dev\chefe-da-casa` (não OneDrive).
 
 ## Ordem recomendada
 
 ### Agora (local)
 
 ```bash
-cd C:\dev\chef-da-casa
+cd C:\dev\chefe-da-casa
 yarn dev
 ```
 

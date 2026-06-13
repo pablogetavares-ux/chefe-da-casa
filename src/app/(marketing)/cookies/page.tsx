@@ -5,7 +5,7 @@ import { cookiesSections } from "@/config/legal-content";
 
 export const metadata: Metadata = {
   title: "Política de Cookies",
-  description: "Como usamos cookies no Chef da Casa AI.",
+  description: "Como usamos cookies no Chefe da Casa.",
 };
 
 export default function CookiesPage() {

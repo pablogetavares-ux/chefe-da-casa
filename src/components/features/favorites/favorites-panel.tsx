@@ -19,7 +19,7 @@ import { AsyncPanel } from "@/shared/components/async-panel";
 import type { Recipe } from "@/types/database";
 
 export function FavoritesPanel() {
-  const { data: favorites, isLoading, error } = useFavorites();
+  const { data: favorites, isLoading, error, refetch } = useFavorites();
   const deleteRecipe = useDeleteRecipe();
   const { confirm, dialog } = useConfirmDialog();
 
@@ -54,6 +54,7 @@ export function FavoritesPanel() {
       <AsyncPanel
         isLoading={isLoading}
         error={error}
+        onRetry={() => void refetch()}
         loadingFallback={
           <div className="grid gap-4 sm:grid-cols-2">
             {[1, 2, 3, 4].map((i) => (

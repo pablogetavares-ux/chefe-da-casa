@@ -14,6 +14,7 @@ import {
   Sparkles,
   Salad,
   Wheat,
+  Crown,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  PREMIUM_RECIPE_MODES,
   RECIPE_GENERATION_MODES,
   RECIPE_MODE_LABELS,
   type RecipeGenerationMode,
@@ -39,6 +41,7 @@ import {
   usePantryItems,
   useProfile,
 } from "@/hooks/use-api";
+import { usePremiumAccess } from "@/shared/hooks/api/identity";
 import {
   calculateFitnessTargets,
   hasCompleteBodyProfile,
@@ -108,6 +111,7 @@ export function GenerateRecipePanel({
   const { data: usage } = useAiUsage();
   const { data: aiStatus } = useAiStatus();
   const { data: profile } = useProfile();
+  const { isPremium } = usePremiumAccess();
   const generateStream = useGenerateRecipeStream();
 
   const [selected, setSelected] = useState<Set<string> | null>(null);
@@ -152,6 +156,7 @@ export function GenerateRecipePanel({
 
   function selectMode(id: RecipeGenerationMode) {
     if (seniorMode) return;
+    if (PREMIUM_RECIPE_MODES.has(id) && !isPremium) return;
     setMode(id);
     if (id === "FITNESS" && fitnessTargets) {
       setCalorieTarget(String(fitnessTargets.calorieTarget));
@@ -269,26 +274,41 @@ export function GenerateRecipePanel({
             <CardDescription>Escolha o estilo da geração.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {MODES.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => selectMode(item.id)}
-                disabled={seniorMode && item.id !== "SENIOR"}
-                className={cn(
-                  "rounded-xl border p-4 text-left transition-colors",
-                  activeMode === item.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/30",
-                )}
-              >
-                <item.icon className="mb-2 size-5 text-primary" />
-                <p className="font-medium">{item.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  {item.description}
-                </p>
-              </button>
-            ))}
+            {MODES.map((item) => {
+              const isPremiumMode = PREMIUM_RECIPE_MODES.has(item.id);
+              const locked = isPremiumMode && !isPremium;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => selectMode(item.id)}
+                  disabled={seniorMode && item.id !== "SENIOR"}
+                  aria-disabled={locked || undefined}
+                  className={cn(
+                    "relative rounded-xl border p-4 text-left transition-colors",
+                    activeMode === item.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/30",
+                    locked && "cursor-not-allowed opacity-60",
+                  )}
+                >
+                  {locked && (
+                    <Badge
+                      variant="secondary"
+                      className="absolute right-2 top-2 gap-1 text-[10px]"
+                    >
+                      <Crown className="size-3" />
+                      Pro
+                    </Badge>
+                  )}
+                  <item.icon className="mb-2 size-5 text-primary" />
+                  <p className="font-medium">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.description}
+                  </p>
+                </button>
+              );
+            })}
           </CardContent>
         </Card>
 
@@ -340,6 +360,7 @@ export function GenerateRecipePanel({
                 value={customIngredient}
                 onChange={(e) => setCustomIngredient(e.target.value)}
                 placeholder="Adicionar ingrediente extra..."
+                aria-label="Adicionar ingrediente extra para a receita"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();

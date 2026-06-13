@@ -4,11 +4,13 @@ import { requireAuthUser } from "@/lib/api/auth";
 import { isAdminAny } from "@/lib/auth/admin";
 import { createClient } from "@/lib/supabase/server";
 import { profileUpdateSchema } from "@/lib/validations";
+import { mergeOfferPreferences } from "@/modules/offers/types/offer-preferences";
+import type { Json } from "@/types/database";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const user = await requireAuthUser();
-    const supabase = await createClient();
+    const user = await requireAuthUser(request);
+    const supabase = await createClient(request);
 
     const { data, error } = await supabase
       .from("profiles")
@@ -31,7 +33,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const user = await requireAuthUser();
+    const user = await requireAuthUser(request);
     const body = await request.json();
     const parsed = profileUpdateSchema.safeParse(body);
 
@@ -42,13 +44,14 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = await createClient(request);
     const updates: {
       full_name?: string;
       body_weight_kg?: number | null;
       body_height_cm?: number | null;
       fitness_goal?: string | null;
       senior_mode_enabled?: boolean;
+      offer_preferences?: Json;
     } = {};
 
     if (parsed.data.fullName !== undefined) {
@@ -65,6 +68,23 @@ export async function PATCH(request: Request) {
     }
     if (parsed.data.seniorModeEnabled !== undefined) {
       updates.senior_mode_enabled = parsed.data.seniorModeEnabled;
+    }
+
+    if (parsed.data.offerPreferences !== undefined) {
+      const { data: currentProfile, error: readError } = await supabase
+        .from("profiles")
+        .select("offer_preferences")
+        .eq("id", user.id)
+        .single();
+
+      if (readError) {
+        throw readError;
+      }
+
+      updates.offer_preferences = mergeOfferPreferences(
+        currentProfile?.offer_preferences,
+        parsed.data.offerPreferences,
+      ) as Json;
     }
 
     const { data, error } = await supabase

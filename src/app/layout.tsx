@@ -4,6 +4,7 @@ import { DM_Sans, Fraunces, Geist_Mono } from "next/font/google";
 import { AppProviders } from "@/providers";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { CookieConsent } from "@/components/shared/cookie-consent";
+import { CulinaryPatternBackground } from "@/components/shared/culinary-pattern-background";
 import { ProductionAnalytics } from "@/components/shared/production-analytics";
 import { siteConfig } from "@/config/site";
 
@@ -33,6 +34,7 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f7f7f5" },
     { media: "(prefers-color-scheme: dark)", color: "#141414" },
@@ -88,6 +90,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col bg-background">
+        <CulinaryPatternBackground />
         <ThemeProvider>
           <AppProviders>{children}</AppProviders>
           <CookieConsent />

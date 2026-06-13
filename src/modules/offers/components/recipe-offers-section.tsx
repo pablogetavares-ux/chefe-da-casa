@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OfferCard } from "@/modules/offers/components/offer-card";
+import { OffersPersonalizationHint } from "@/modules/offers/components/offers-personalization-hint";
 import { OffersRegionCitySelect } from "@/modules/offers/components/offers-region-city-select";
+import { DEFAULT_OFFER_VERTICAL_SLUG } from "@/modules/offers/services/catalog";
 import { OFFER_REGION_SCOPE_LABELS } from "@/modules/offers/region/constants";
 import {
   DEFAULT_OFFER_CITY,
@@ -27,12 +29,13 @@ type RecipeOffersSectionProps = {
 };
 
 export function RecipeOffersSection({ recipeId }: RecipeOffersSectionProps) {
-  const { region, patchRegion } = useOfferRegionPreference();
-  const { data, isLoading, error } = useOffersForRecipe(recipeId, {
+  const { region, patchRegion, hydrated } = useOfferRegionPreference();
+  const { data, isLoading, error, refetch } = useOffersForRecipe(recipeId, {
     city: region.city,
     state: region.state,
     radiusKm: region.radiusKm,
     scope: region.scope,
+    enabled: hydrated,
   });
   const toggleFavorite = useToggleOfferFavorite();
   const addToShopping = useAddOfferToShoppingList();
@@ -68,6 +71,7 @@ export function RecipeOffersSection({ recipeId }: RecipeOffersSectionProps) {
           {description ? (
             <p className="text-sm text-muted-foreground">{description}</p>
           ) : null}
+          <OffersPersonalizationHint userContext={data?.userContext} />
           {data?.matchScope === "cross_city" ? (
             <Badge variant="secondary" className="gap-1 font-normal">
               <MapPin className="size-3.5" />
@@ -89,10 +93,10 @@ export function RecipeOffersSection({ recipeId }: RecipeOffersSectionProps) {
           />
 
           <Link
-            href="/app/offers"
+            href={`/app/offers/${DEFAULT_OFFER_VERTICAL_SLUG}`}
             className="inline-flex h-11 min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 text-[0.8rem] font-medium hover:bg-muted"
           >
-            Ver todas
+            Ver supermercados
             <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -102,6 +106,7 @@ export function RecipeOffersSection({ recipeId }: RecipeOffersSectionProps) {
         <AsyncPanel
           isLoading={isLoading}
           error={error}
+          onRetry={() => void refetch()}
           loadingFallback={
             <div className="grid gap-4 lg:grid-cols-2">
               <Skeleton className="h-72 rounded-2xl" />

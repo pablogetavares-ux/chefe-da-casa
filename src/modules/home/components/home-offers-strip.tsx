@@ -20,7 +20,7 @@ export function HomeOffersStrip({ offers, city }: HomeOffersStripProps) {
           href="/app/offers"
           className="mt-2 inline-block text-sm text-primary hover:underline"
         >
-          Explorar ofertas
+          Abrir Central de Ofertas
         </Link>
       </div>
     );

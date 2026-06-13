@@ -102,7 +102,7 @@ function LoginFormContent({
         <CardContent className="space-y-4">
           {accountDeleted && (
             <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-              Sua conta foi excluída com sucesso. Obrigado por usar o Chef da
+              Sua conta foi excluída com sucesso. Obrigado por usar o Chefe da
               Casa.
             </div>
           )}

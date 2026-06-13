@@ -1,5 +1,6 @@
 import { apiError, apiSuccess } from "@/lib/api/response";
-import { requireAuthUser } from "@/lib/api/auth";
+import { requireAuthenticatedClient } from "@/lib/api/auth";
+import { assertPremiumRecipeMode } from "@/lib/billing/assert-premium";
 import { findCachedRecipeGeneration } from "@/lib/ai/core/cache";
 import {
   assertAiGenerationAllowed,
@@ -21,8 +22,10 @@ import {
   extractIngredientNames,
   scanIngredientsFromImage,
 } from "@/lib/ai/services/scan";
-import { resolveScanImageUrl } from "@/lib/ai/services/scan-utils";
-import { createClient } from "@/lib/supabase/server";
+import {
+  loadRecentScanByStoragePath,
+  resolveScanImageUrl,
+} from "@/lib/ai/services/scan-utils";
 import {
   insertIngredientScan,
   insertUsageLog,
@@ -30,6 +33,7 @@ import {
 import { scanAndGenerateSchema } from "@/lib/validations";
 import { enrichGenerateRecipeInput } from "@/lib/fitness/resolve-fitness-goals";
 import { getProfileBodyFields } from "@/lib/queries/profile-fitness";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -38,7 +42,7 @@ export async function POST(request: Request) {
   let generationId: string | null = null;
 
   try {
-    const user = await requireAuthUser();
+    const { user, supabase } = await requireAuthenticatedClient(request);
     await assertAiRateLimit(user.id);
     ensureOpenAiConfigured();
 
@@ -49,12 +53,14 @@ export async function POST(request: Request) {
       return apiError(
         parsed.error.issues[0]?.message ?? "Dados inválidos",
         400,
+        "VALIDATION_ERROR",
       );
     }
 
+    await assertPremiumRecipeMode(user.id, parsed.data.mode);
+
     const usage = await assertAiGenerationAllowed(user.id);
     await assertRecipesPerMonthLimit(user.id);
-    const supabase = await createClient();
 
     const { imageUrl, storagePath } = await resolveScanImageUrl(
       supabase,
@@ -62,27 +68,41 @@ export async function POST(request: Request) {
       parsed.data,
     );
 
-    let scanResult;
-    try {
-      scanResult = await scanIngredientsFromImage(
-        imageUrl,
-        parsed.data.context,
-      );
-    } catch {
-      throw new Error("SCAN_FAILED");
+    let scanData;
+    let scanTokens = 0;
+
+    const reusedScan =
+      storagePath && !parsed.data.forceRegenerate
+        ? await loadRecentScanByStoragePath(supabase, user.id, storagePath)
+        : null;
+
+    if (reusedScan) {
+      scanData = reusedScan;
+    } else {
+      let scanResult;
+      try {
+        scanResult = await scanIngredientsFromImage(
+          imageUrl,
+          parsed.data.context,
+        );
+      } catch {
+        throw new Error("SCAN_FAILED");
+      }
+      scanData = scanResult.data;
+      scanTokens = scanResult.totalTokens;
+
+      await insertIngredientScan({
+        user_id: user.id,
+        storage_path: storagePath ?? "inline-base64",
+        detected_ingredients: scanData.ingredients,
+        scene_description: scanData.sceneDescription,
+      });
     }
 
-    const ingredientNames = extractIngredientNames(scanResult.data);
+    const ingredientNames = extractIngredientNames(scanData);
     if (ingredientNames.length === 0) {
       throw new Error("SCAN_FAILED");
     }
-
-    await insertIngredientScan({
-      user_id: user.id,
-      storage_path: storagePath ?? "inline-base64",
-      detected_ingredients: scanResult.data.ingredients,
-      scene_description: scanResult.data.sceneDescription,
-    });
 
     const generateInput = enrichGenerateRecipeInput(
       {
@@ -108,8 +128,8 @@ export async function POST(request: Request) {
           cached: true,
           scan: {
             ingredientNames,
-            sceneDescription: scanResult.data.sceneDescription,
-            suggestions: scanResult.data.suggestions,
+            sceneDescription: scanData.sceneDescription,
+            suggestions: scanData.suggestions,
           },
           usage: {
             used: usage.used,
@@ -139,8 +159,9 @@ export async function POST(request: Request) {
 
     await insertUsageLog(user.id, "ai.scan_ingredients", {
       ingredient_count: ingredientNames.length,
-      tokens: scanResult.totalTokens,
+      tokens: scanTokens,
       combined: true,
+      scan_reused: Boolean(reusedScan),
     });
 
     return apiSuccess({
@@ -149,8 +170,8 @@ export async function POST(request: Request) {
       cached: false,
       scan: {
         ingredientNames,
-        sceneDescription: scanResult.data.sceneDescription,
-        suggestions: scanResult.data.suggestions,
+        sceneDescription: scanData.sceneDescription,
+        suggestions: scanData.suggestions,
       },
       usage: {
         used: usage.used + 1,
@@ -160,13 +181,13 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (generationId) {
-      const supabase = await createClient();
+      const supabase = await createClient(request);
       await markGenerationFailed(
         supabase,
         generationId,
         error instanceof Error ? error.message : "Erro desconhecido",
       );
     }
-    return mapAiRouteError(error);
+    return mapAiRouteError(error, "POST /api/v1/ai/scan-and-generate");
   }
 }

@@ -15,7 +15,17 @@ export type UserDataExport = {
   aiGenerations: unknown[];
   ingredientScans: unknown[];
   subscriptions: unknown[];
+  /** Tabelas que falharam na exportação (vazio = export completo). */
+  exportErrors?: string[];
 };
+
+function collectQueryErrors(
+  entries: { label: string; error: { message: string } | null }[],
+): string[] {
+  return entries
+    .filter((entry) => entry.error)
+    .map((entry) => `${entry.label}: ${entry.error!.message}`);
+}
 
 export async function exportUserData(
   supabase: SupabaseClient<Database>,
@@ -61,6 +71,22 @@ export async function exportUserData(
       .eq("user_id", userId),
     supabase.from("subscriptions").select("*").eq("user_id", userId),
   ]);
+
+  const exportErrors = collectQueryErrors([
+    { label: "profile", error: profileRes.error },
+    { label: "recipes", error: recipesRes.error },
+    { label: "pantry_items", error: pantryRes.error },
+    { label: "favorites", error: favoritesRes.error },
+    { label: "shopping_lists", error: shoppingRes.error },
+    { label: "usage_logs", error: usageRes.error },
+    { label: "ai_generations", error: aiRes.error },
+    { label: "ingredient_scans", error: scansRes.error },
+    { label: "subscriptions", error: subsRes.error },
+  ]);
+
+  if (exportErrors.length > 0) {
+    throw new Error(`EXPORT_PARTIAL_FAILURE:${exportErrors.join("; ")}`);
+  }
 
   const payload: UserDataExport = {
     exportedAt: new Date().toISOString(),

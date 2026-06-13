@@ -3,11 +3,23 @@ import type { Metadata } from "next";
 import { PricingPlans } from "@/components/features/marketing/pricing-plans";
 import { PricingPageJsonLd } from "@/components/shared/json-ld";
 import { Badge } from "@/components/ui/badge";
+import { MARKETING_PLANS_SECTION } from "@/config/marketing-plans";
+import { PRICING_SEO } from "@/config/marketing-seo";
+import { siteConfig } from "@/config/site";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Planos e Preços",
-  description: "Escolha o plano ideal para suas receitas com IA.",
+  title: PRICING_SEO.title,
+  description: PRICING_SEO.description,
+  alternates: { canonical: `${siteConfig.url}/pricing` },
+  openGraph: {
+    title: `${PRICING_SEO.title} | ${siteConfig.name}`,
+    description: PRICING_SEO.description,
+    url: `${siteConfig.url}/pricing`,
+    siteName: siteConfig.name,
+    locale: siteConfig.locale,
+    type: "website",
+  },
 };
 
 export default async function PricingPage() {
@@ -21,17 +33,21 @@ export default async function PricingPage() {
       <PricingPageJsonLd />
       <div className="mb-14 text-center">
         <Badge variant="secondary" className="mb-4">
-          Planos flexíveis
+          {MARKETING_PLANS_SECTION.eyebrow}
         </Badge>
-        <h1 className="font-heading text-3xl font-semibold md:text-5xl">
-          Escolha seu plano
+        <h1 className="font-heading text-3xl font-semibold text-balance md:text-5xl">
+          {MARKETING_PLANS_SECTION.title}
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          Comece grátis e evolua quando quiser. Sem compromisso.
+        <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+          {MARKETING_PLANS_SECTION.description}
         </p>
       </div>
 
       <PricingPlans isAuthenticated={Boolean(user)} />
+
+      <p className="mx-auto mt-10 max-w-xl text-center text-xs text-muted-foreground">
+        {MARKETING_PLANS_SECTION.footnote}
+      </p>
     </section>
   );
 }

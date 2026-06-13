@@ -1,6 +1,6 @@
 # Integração Frontend ↔ Backend (MCP)
 
-> Projeto `chef-da-casa-ai` · Supabase `mnevlegpkrncxlqkqdnl`
+> Projeto `chefe-da-casa` · Supabase `mnevlegpkrncxlqkqdnl`
 
 ## Status geral: ✅ Operacional
 
@@ -18,10 +18,10 @@
 
 ```
 Browser (React Query)
-    ↓ fetch /api/v1/*  (credentials: same-origin)
+    ↓ fetch /api/v1/*  (credentials: same-origin, timeout 30s)
 Next.js Route Handler
-    ↓ requireAuthUser()
-    ↓ createClient() server
+    ↓ requireAuthUser() / Bearer via Authorization header
+    ↓ createClient(request) — cookie ou Bearer
 Supabase Postgres + RLS
     ↑ validado via MCP (list_tables, execute_sql, advisors)
 ```
@@ -65,18 +65,24 @@ npm run offers:sync-images
 
 ## Mapa frontend → API → Supabase
 
-| UI / Hook                   | API                                   | Tabela(s)                                               |
-| --------------------------- | ------------------------------------- | ------------------------------------------------------- |
-| `useProfile`                | `GET/PATCH /api/v1/profile`           | `profiles`                                              |
-| `usePantryItems`            | `/api/v1/pantry`                      | `pantry_items`                                          |
-| `useRecipes`                | `/api/v1/recipes`                     | `recipes`                                               |
-| `useFavorites`              | `/api/v1/favorites`                   | `favorites`                                             |
-| `useShoppingList`           | `/api/v1/shopping-list/*`             | `shopping_lists`, `shopping_list_items`                 |
-| `useOffers`                 | `/api/v1/offers`                      | `regional_offers`, `regional_stores`, `offer_favorites` |
-| `useOffersForRecipe`        | `/api/v1/offers/for-recipe`           | idem + matching em `modules/offers`                     |
-| `useAddOfferToShoppingList` | `POST /api/v1/offers/add-to-shopping` | bridge → `shopping_list_items`                          |
-| `useAiUsage`                | `/api/v1/ai/usage`                    | `usage_logs`, `profiles.plan`                           |
-| Login / OAuth               | Server Actions                        | `auth.users` → trigger → `profiles`                     |
+| UI / Hook                     | API                                   | Tabela(s)                                               |
+| ----------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `useProfile`                  | `GET/PATCH /api/v1/profile`           | `profiles`                                              |
+| `usePantryItems`              | `/api/v1/pantry`                      | `pantry_items`                                          |
+| `useRecipes`                  | `/api/v1/recipes`                     | `recipes`                                               |
+| `useFavorites`                | `/api/v1/favorites`                   | `favorites`                                             |
+| `useShoppingList`             | `/api/v1/shopping-list/*`             | `shopping_lists`, `shopping_list_items`                 |
+| `useOffers`                   | `/api/v1/offers`                      | `regional_offers`, `regional_stores`, `offer_favorites` |
+| `useOffersHub`                | `/api/v1/offers/hub`                  | `offer_verticals`, `regional_offers`                    |
+| `useOffersForRecipe`          | `/api/v1/offers/for-recipe`           | idem + matching em `modules/offers`                     |
+| `useOffersForPantry`          | `/api/v1/offers/for-pantry`           | `pantry_items`, `recipes`, ofertas                      |
+| `useOffersForAntiWaste`       | `/api/v1/offers/for-anti-waste`       | anti-waste summary + ofertas                            |
+| `useOffersForIngredients`     | `POST /api/v1/offers/for-ingredients` | matching por ingredientes                               |
+| `useOffersIntegrationContext` | `/api/v1/offers/context`              | `profiles`, `offer_extension_registry`                  |
+| `useOfferRegionConfig`        | `/api/v1/offers/region`               | `profiles` (região)                                     |
+| `useAddOfferToShoppingList`   | `POST /api/v1/offers/add-to-shopping` | bridge → `shopping_list_items`                          |
+| `useAiUsage`                  | `/api/v1/ai/usage`                    | `usage_logs`, `profiles.plan`                           |
+| Login / OAuth                 | Server Actions                        | `auth.users` → trigger → `profiles`                     |
 
 ## Endpoints (amostra)
 

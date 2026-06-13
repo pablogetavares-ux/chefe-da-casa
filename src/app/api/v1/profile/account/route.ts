@@ -1,4 +1,5 @@
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { handleApiRouteError } from "@/lib/api/route-error";
 import { requireAuthUser } from "@/lib/api/auth";
 import { assertSensitiveActionRateLimit } from "@/lib/api/sensitive-rate-limit";
 import { deleteUserAccount } from "@/lib/privacy/delete-user-account";
@@ -30,24 +31,6 @@ export async function DELETE(request: Request) {
 
     return apiSuccess({ deleted: true });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return apiError("Não autenticado", 401, "UNAUTHORIZED");
-    }
-    if (error instanceof Error && error.message === "RATE_LIMIT_EXCEEDED") {
-      return apiError(
-        "Muitas solicitações. Aguarde um minuto e tente novamente.",
-        429,
-        "RATE_LIMIT_EXCEEDED",
-      );
-    }
-    const message =
-      error instanceof Error ? error.message : "Erro ao excluir conta";
-    if (message.includes("SERVICE_ROLE")) {
-      return apiError(message, 503, "SERVICE_UNAVAILABLE");
-    }
-    if (message.includes("Não autenticado")) {
-      return apiError("Não autenticado", 401, "UNAUTHORIZED");
-    }
-    return apiError(message, 500);
+    return handleApiRouteError(error, "DELETE /api/v1/profile/account");
   }
 }

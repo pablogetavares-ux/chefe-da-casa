@@ -1,11 +1,11 @@
 export const siteConfig = {
-  name: "Chef da Casa AI",
+  name: "Chefe da Casa",
   description:
-    "Crie receitas saudáveis e saborosas com os ingredientes que você já tem em casa.",
+    "Receitas, Compras e Economia Inteligente para sua Família — despensa, listas e ofertas regionais conectadas.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   ogImage: "/opengraph-image",
   links: {
-    github: "https://github.com/chef-da-casa-ai",
+    github: "https://github.com/chefe-da-casa",
     twitter: "https://twitter.com/chefdacasaai",
   },
   locale: "pt-BR",

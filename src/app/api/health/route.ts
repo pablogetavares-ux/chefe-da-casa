@@ -61,7 +61,7 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           status: "degraded",
-          service: "chef-da-casa-ai",
+          service: "chefe-da-casa",
           timestamp,
           checks,
         },
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         status: "degraded",
-        service: "chef-da-casa-ai",
+        service: "chefe-da-casa",
         timestamp,
         checks,
         readiness: {
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         status,
-        service: "chef-da-casa-ai",
+        service: "chefe-da-casa",
         timestamp,
         checks,
       },
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
       readyForBilling: readiness.readyForBilling,
       readyForProduction: readiness.readyForProduction,
       monitoring: checks.monitoring,
-      service: "chef-da-casa-ai",
+      service: "chefe-da-casa",
       timestamp,
       checks,
       blockers: readiness.blockers,

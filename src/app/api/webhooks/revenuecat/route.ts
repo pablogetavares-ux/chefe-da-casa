@@ -49,6 +49,19 @@ export async function POST(request: Request) {
     const result = await handleRevenueCatWebhook(
       body as Parameters<typeof handleRevenueCatWebhook>[0],
     );
+
+    if (!result.ok) {
+      logger.error("revenuecat.webhook.skipped", {
+        eventId,
+        reason: result.reason,
+      });
+      return apiError(
+        "Evento ignorado — app_user_id ausente",
+        422,
+        "WEBHOOK_SKIPPED",
+      );
+    }
+
     await markRevenueCatWebhookProcessed(eventId, event?.type ?? "UNKNOWN");
     return apiSuccess({ received: true, ...result });
   } catch (error) {

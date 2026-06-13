@@ -34,6 +34,7 @@ import {
 } from "@/hooks/use-api";
 import type { AntiWastePantryItem } from "@/lib/queries/anti-waste";
 import { formatExpiryLabel, getExpiryStatus } from "@/lib/utils/pantry";
+import { AntiWasteOffersSection } from "@/modules/offers/components/anti-waste-offers-section";
 import { cn } from "@/lib/utils";
 
 function ItemChip({
@@ -227,6 +228,8 @@ export function AntiWastePanel() {
           </ul>
         </div>
       )}
+
+      <AntiWasteOffersSection />
 
       <Card className="surface-card">
         <CardHeader>

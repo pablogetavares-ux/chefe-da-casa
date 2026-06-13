@@ -77,7 +77,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       .single();
 
     if (error || !data) {
-      return apiError(error?.message ?? "Erro ao atualizar item", 500);
+      if (error) throw error;
+      return apiError("Erro ao atualizar item", 500);
     }
 
     await touchShoppingList(ownership.listId);
@@ -104,9 +105,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       .delete()
       .eq("id", id);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    if (error) throw error;
 
     await touchShoppingList(ownership.listId);
 

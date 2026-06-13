@@ -31,6 +31,18 @@ export default defineConfig({
       testMatch: /app-flow\.spec\.ts/,
       use: { ...devices["Pixel 7"] },
     },
+    {
+      name: "moto-g75",
+      testMatch: /mobile-android\.spec\.ts/,
+      use: {
+        viewport: { width: 412, height: 915 },
+        deviceScaleFactor: 2.625,
+        isMobile: true,
+        hasTouch: true,
+        userAgent:
+          "Mozilla/5.0 (Linux; Android 14; moto g75 Build/U1TGS34.8-18-9-1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.210 Mobile Safari/537.36",
+      },
+    },
   ],
   webServer: isCI
     ? {

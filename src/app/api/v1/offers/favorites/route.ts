@@ -1,3 +1,4 @@
+import { throwIfSupabaseError } from "@/lib/api/supabase-errors";
 import { apiError, apiSuccess } from "@/lib/api/response";
 import { handleApiRouteError } from "@/lib/api/route-error";
 import { requireAuthUser } from "@/lib/api/auth";
@@ -15,9 +16,7 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    throwIfSupabaseError(error);
 
     return apiSuccess({
       offerIds: (data ?? []).map((row) => row.offer_id),
@@ -65,7 +64,7 @@ export async function POST(request: Request) {
       if (error.code === "23505") {
         return apiError("Oferta já está nos favoritos", 409);
       }
-      return apiError(error.message, 500);
+      throw error;
     }
 
     return apiSuccess({ id: data.id, offerId: parsed.data.offerId }, 201);
@@ -90,9 +89,7 @@ export async function DELETE(request: Request) {
       .eq("user_id", user.id)
       .eq("offer_id", offerId);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    throwIfSupabaseError(error);
 
     return apiSuccess({ offerId });
   } catch (error) {

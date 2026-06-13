@@ -27,7 +27,7 @@ const STORAGE_KEY = "chef-onboarding-v1";
 const STEPS = [
   {
     icon: ChefHat,
-    title: "Bem-vindo ao Chef da Casa",
+    title: "Bem-vindo ao Chefe da Casa",
     description:
       "Sua cozinha inteligente: cadastre ingredientes, gere receitas com IA e organize suas compras.",
   },

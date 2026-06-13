@@ -3,6 +3,7 @@ import {
   isAdminClientConfigured,
 } from "@/lib/supabase/admin";
 import { logPrivacyEvent } from "@/lib/privacy/audit";
+import { logger } from "@/lib/observability/logger";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 
 const FOOD_SCANS_BUCKET = "food-scans";
@@ -14,7 +15,10 @@ async function deleteUserStorageFiles(userId: string) {
     const { data, error } = await admin.storage
       .from(FOOD_SCANS_BUCKET)
       .list(prefix, { limit: 1000 });
-    if (error || !data?.length) return [];
+    if (error) {
+      throw new Error(`DELETE_STORAGE_LIST_FAILED:${error.message}`);
+    }
+    if (!data?.length) return [];
 
     const paths: string[] = [];
     for (const item of data) {
@@ -33,7 +37,7 @@ async function deleteUserStorageFiles(userId: string) {
 
   const { error } = await admin.storage.from(FOOD_SCANS_BUCKET).remove(paths);
   if (error) {
-    console.error("storage cleanup on account delete:", error.message);
+    throw new Error(`DELETE_STORAGE_REMOVE_FAILED:${error.message}`);
   }
 }
 
@@ -41,11 +45,15 @@ async function cancelActiveSubscription(userId: string) {
   if (!isStripeConfigured()) return;
 
   const admin = createAdminClient();
-  const { data: subscription } = await admin
+  const { data: subscription, error: readError } = await admin
     .from("subscriptions")
     .select("stripe_subscription_id, status")
     .eq("user_id", userId)
     .maybeSingle();
+
+  if (readError) {
+    throw new Error(`DELETE_STRIPE_READ_FAILED:${readError.message}`);
+  }
 
   if (
     !subscription?.stripe_subscription_id ||
@@ -57,7 +65,11 @@ async function cancelActiveSubscription(userId: string) {
   try {
     await getStripe().subscriptions.cancel(subscription.stripe_subscription_id);
   } catch (error) {
-    console.error("stripe cancel on account delete:", error);
+    logger.error("privacy.delete.stripe_cancel_failed", {
+      userId,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+    throw new Error("DELETE_STRIPE_CANCEL_FAILED");
   }
 }
 

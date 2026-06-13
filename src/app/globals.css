@@ -55,7 +55,7 @@
   --card-foreground: oklch(0.2 0.02 145);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 145);
-  /* Verde saúde — identidade Chef da Casa */
+  /* Verde saúde — identidade Chefe da Casa */
   --primary: oklch(0.52 0.14 145);
   --primary-foreground: oklch(0.99 0.005 90);
   --secondary: oklch(0.96 0.02 90);
@@ -123,11 +123,14 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+    min-height: 100dvh;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
   }
   h1,
   h2,

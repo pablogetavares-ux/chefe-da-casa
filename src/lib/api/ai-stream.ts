@@ -1,6 +1,13 @@
 import type { GenerateRecipeRequest } from "@/types";
 import type { GenerateRecipeResponse } from "@/lib/api/client";
+import {
+  ApiClientError,
+  networkErrorMessage,
+  timeoutErrorMessage,
+} from "@/lib/api/client-errors";
 import { getSafeRedirectPath } from "@/lib/auth/redirect";
+
+const AI_STREAM_TIMEOUT_MS = 60_000;
 
 type StreamHandlers = {
   onStart?: (payload: { generationId: string }) => void;
@@ -31,28 +38,60 @@ function parseSseBlock(block: string) {
   }
 }
 
+async function parseStreamInitError(
+  response: Response,
+): Promise<ApiClientError> {
+  const json = (await response.json().catch(() => null)) as {
+    error?: string;
+    code?: string;
+  } | null;
+
+  return new ApiClientError(
+    json?.error ?? "Falha ao iniciar streaming",
+    json?.code,
+    response.status,
+  );
+}
+
 export async function streamGenerateRecipe(
   payload: GenerateRecipeRequest,
   handlers: StreamHandlers,
 ) {
-  const response = await fetch("/api/v1/ai/generate-recipe/stream", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  let response: Response;
+
+  try {
+    response = await fetch("/api/v1/ai/generate-recipe/stream", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(AI_STREAM_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "TimeoutError" || error.name === "AbortError")
+    ) {
+      const message = timeoutErrorMessage();
+      handlers.onError?.(message);
+      throw new ApiClientError(message, "AI_TIMEOUT");
+    }
+
+    const message = networkErrorMessage();
+    handlers.onError?.(message);
+    throw new ApiClientError(message, "NETWORK_ERROR");
+  }
 
   if (response.status === 401) {
     const next = getSafeRedirectPath(window.location.pathname);
     window.location.href = `/login?next=${encodeURIComponent(next)}`;
-    throw new Error("Não autenticado");
+    throw new ApiClientError("Não autenticado", "UNAUTHORIZED", 401);
   }
 
   if (!response.ok || !response.body) {
-    const json = (await response.json().catch(() => null)) as {
-      error?: string;
-    } | null;
-    throw new Error(json?.error ?? "Falha ao iniciar streaming");
+    const apiError = await parseStreamInitError(response);
+    handlers.onError?.(apiError.message);
+    throw apiError;
   }
 
   const reader = response.body.getReader();
@@ -88,13 +127,13 @@ export async function streamGenerateRecipe(
           settled = true;
           handlers.onDone?.(parsed.data as GenerateRecipeResponse);
           return;
-        case "error":
+        case "error": {
           settled = true;
-          handlers.onError?.(
-            (parsed.data as { message?: string }).message ??
-              "Erro no streaming",
-          );
-          return;
+          const payload = parsed.data as { message?: string; code?: string };
+          const message = payload.message ?? "Erro no streaming";
+          handlers.onError?.(message);
+          throw new ApiClientError(message, payload.code, 500);
+        }
         default:
           break;
       }
@@ -102,6 +141,8 @@ export async function streamGenerateRecipe(
   }
 
   if (!settled) {
-    handlers.onError?.("Stream encerrado antes da conclusão");
+    const message = "Stream encerrado antes da conclusão";
+    handlers.onError?.(message);
+    throw new ApiClientError(message, "AI_STREAM_INCOMPLETE");
   }
 }

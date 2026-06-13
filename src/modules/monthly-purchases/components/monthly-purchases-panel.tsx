@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   ArrowLeft,
   Copy,
@@ -131,9 +138,11 @@ export function MonthlyPurchasesPanel({
     hasCopySources && (data?.items.length ?? 0) === 0;
 
   const periodKey = `${month}-${year}`;
-  const [trackedPeriod, setTrackedPeriod] = useState(periodKey);
-  const [autoPromptedPeriod, setAutoPromptedPeriod] = useState<string | null>(
-    null,
+  const autoPromptedRef = useRef<string | null>(null);
+  const copyPromptReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
   );
 
   const effectiveCopySourceMonth =
@@ -141,22 +150,23 @@ export function MonthlyPurchasesPanel({
   const effectiveCopySourceYear =
     copySourceYear ?? copySuggestion?.defaultSource?.year ?? null;
 
-  if (trackedPeriod !== periodKey) {
-    setTrackedPeriod(periodKey);
-    setCopyDialogOpen(false);
-    setCopySourceMonth(null);
-    setCopySourceYear(null);
-    setAutoPromptedPeriod(null);
-  }
-
   const shouldAutoPrompt =
+    copyPromptReady &&
     !readOnly &&
     copySuggestion?.shouldPrompt &&
     !isCopyPromptResolved(month, year);
 
-  if (shouldAutoPrompt && autoPromptedPeriod !== periodKey) {
-    setAutoPromptedPeriod(periodKey);
+  useEffect(() => {
+    if (!shouldAutoPrompt || autoPromptedRef.current === periodKey) return;
+    autoPromptedRef.current = periodKey;
     setCopyDialogOpen(true);
+  }, [shouldAutoPrompt, periodKey]);
+
+  function resetCopyUiForNewPeriod() {
+    setCopyDialogOpen(false);
+    setCopySourceMonth(null);
+    setCopySourceYear(null);
+    autoPromptedRef.current = null;
   }
 
   function openCopyDialog() {
@@ -444,6 +454,7 @@ export function MonthlyPurchasesPanel({
             onChange={(m, y) => {
               setMonth(m);
               setYear(y);
+              resetCopyUiForNewPeriod();
             }}
           />
         </FadeIn>
@@ -503,6 +514,7 @@ export function MonthlyPurchasesPanel({
             <Input
               className="pl-9"
               placeholder="Buscar na lista…"
+              aria-label="Buscar itens na lista de compras do mês"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

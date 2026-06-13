@@ -28,8 +28,8 @@ export async function POST(request: Request) {
 
     return apiSuccess(result, result.added ? 201 : 200);
   } catch (error) {
-    if (error instanceof Error && error.message.includes("não encontrada")) {
-      return apiError(error.message, 404);
+    if (error instanceof Error && error.message.includes("não encontrad")) {
+      return apiError("Recurso não encontrado", 404, "NOT_FOUND");
     }
     return handleApiRouteError(
       error,

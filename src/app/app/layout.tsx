@@ -18,7 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <AppSidebar />
           <main
             id="main-content"
-            className="flex-1 p-4 pb-24 md:p-8 md:pb-8"
+            className="flex-1 p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8"
             tabIndex={-1}
           >
             <div className="mx-auto max-w-6xl">{children}</div>

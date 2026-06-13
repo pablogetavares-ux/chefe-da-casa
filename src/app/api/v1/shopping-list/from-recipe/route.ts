@@ -99,9 +99,7 @@ export async function POST(request: Request) {
       .insert(rows)
       .select();
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    if (error) throw error;
 
     await touchShoppingList(list.id);
 

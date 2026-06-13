@@ -6,6 +6,7 @@ import type { Recipe } from "@/types/database";
 export type HomeGreeting = {
   firstName: string;
   plan: string;
+  period: string;
 };
 
 export type HomeStats = {

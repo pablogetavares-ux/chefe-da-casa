@@ -8,8 +8,8 @@ npm run dev
 
 (`yarn dev` faz o mesmo.)
 
-- **Pasta no OneDrive:** sincroniza para `C:\dev\chef-da-casa` e sobe o servidor lá (rápido, sem aviso de disco lento).
-- **Pasta em `C:\dev\chef-da-casa`:** sobe o Next.js direto na pasta.
+- **Pasta no OneDrive:** sincroniza para `C:\dev\chefe-da-casa` e sobe o servidor lá (rápido, sem aviso de disco lento).
+- **Pasta em `C:\dev\chefe-da-casa`:** sobe o Next.js direto na pasta.
 
 ## Outros
 
@@ -24,4 +24,4 @@ http://localhost:3000/app/admin — e-mail em `ADMIN_EMAILS` no `.env`.
 
 ## Cursor (opcional)
 
-Abrir `chef-da-casa-dev.code-workspace` aponta para `C:\dev\chef-da-casa`.
+Abrir `chefe-da-casa-dev.code-workspace` aponta para `C:\dev\chefe-da-casa`.

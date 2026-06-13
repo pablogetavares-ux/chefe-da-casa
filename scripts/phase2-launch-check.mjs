@@ -30,7 +30,7 @@ function get(name) {
   return process.env[name] || fileEnv[name] || "";
 }
 
-console.log("=== Go-live — Chef da Casa AI (Fase 2) ===\n");
+console.log("=== Go-live — Chefe da Casa (Fase 2) ===\n");
 
 const deployCheck = spawnSync(
   "node",

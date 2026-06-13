@@ -68,9 +68,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       .eq("id", id)
       .eq("user_id", user.id);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    if (error) throw error;
 
     return apiSuccess({ id });
   } catch (error) {

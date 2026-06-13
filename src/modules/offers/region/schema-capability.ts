@@ -11,6 +11,10 @@ export type OffersSchemaCapability = {
   storeGeo: boolean;
   /** regional_stores.is_active */
   storeActiveFlag: boolean;
+  /** offer_verticals + offer_categories — Central Multi-Ofertas */
+  offerCatalog: boolean;
+  /** índices de busca em regional_offers (pg_trgm) */
+  offerSearchIndexes: boolean;
 };
 
 let cached: OffersSchemaCapability | null = null;
@@ -29,6 +33,14 @@ async function columnExists(
   return !isMissingColumn(error);
 }
 
+async function tableExists(
+  supabase: Client,
+  table: "offer_verticals",
+): Promise<boolean> {
+  const { error } = await supabase.from(table).select("id").limit(1);
+  return error?.code !== "42P01";
+}
+
 /**
  * Detecta se a migration `regional_offers_geo_expansion` foi aplicada.
  * Resultado em cache por processo (dev HMR reinicia o cache).
@@ -36,15 +48,23 @@ async function columnExists(
 async function probeOffersSchema(
   supabase: Client,
 ): Promise<OffersSchemaCapability> {
-  const [profileRegion, storeGeo, storeActiveFlag] = await Promise.all([
-    columnExists(supabase, "profiles", "offer_city"),
-    columnExists(supabase, "regional_stores", "latitude"),
-    columnExists(supabase, "regional_stores", "is_active"),
-  ]);
+  const [profileRegion, storeGeo, storeActiveFlag, offerCatalog] =
+    await Promise.all([
+      columnExists(supabase, "profiles", "offer_city"),
+      columnExists(supabase, "regional_stores", "latitude"),
+      columnExists(supabase, "regional_stores", "is_active"),
+      tableExists(supabase, "offer_verticals"),
+    ]);
 
-  const result = { profileRegion, storeGeo, storeActiveFlag };
+  const result = {
+    profileRegion,
+    storeGeo,
+    storeActiveFlag,
+    offerCatalog,
+    offerSearchIndexes: offerCatalog,
+  };
 
-  if (profileRegion && storeGeo && storeActiveFlag) {
+  if (profileRegion && storeGeo && storeActiveFlag && offerCatalog) {
     cached = result;
   }
 

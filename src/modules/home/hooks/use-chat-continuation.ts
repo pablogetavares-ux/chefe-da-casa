@@ -10,20 +10,37 @@ export type ChatSnapshot = {
   updatedAt: string;
 };
 
+let cachedRaw: string | null = null;
+let cachedSnapshot: ChatSnapshot | null = null;
+
 function readSnapshot(): ChatSnapshot | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(CHAT_SNAPSHOT_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as ChatSnapshot;
+    if (!raw) {
+      cachedRaw = null;
+      cachedSnapshot = null;
+      return null;
+    }
+    if (raw === cachedRaw) {
+      return cachedSnapshot;
+    }
+    cachedRaw = raw;
+    cachedSnapshot = JSON.parse(raw) as ChatSnapshot;
+    return cachedSnapshot;
   } catch {
+    cachedRaw = null;
+    cachedSnapshot = null;
     return null;
   }
 }
 
 export function saveChatSnapshot(snapshot: ChatSnapshot) {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(CHAT_SNAPSHOT_KEY, JSON.stringify(snapshot));
+  const raw = JSON.stringify(snapshot);
+  sessionStorage.setItem(CHAT_SNAPSHOT_KEY, raw);
+  cachedRaw = raw;
+  cachedSnapshot = snapshot;
 }
 
 export function useChatContinuation() {
@@ -45,6 +62,8 @@ export function useChatContinuation() {
   const clear = useCallback(() => {
     if (typeof window === "undefined") return;
     sessionStorage.removeItem(CHAT_SNAPSHOT_KEY);
+    cachedRaw = null;
+    cachedSnapshot = null;
     window.dispatchEvent(new Event("chef-chat-updated"));
   }, []);
 

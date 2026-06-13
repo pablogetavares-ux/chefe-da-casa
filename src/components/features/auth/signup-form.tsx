@@ -85,6 +85,11 @@ function SignupFormContent({
               {state.error}
             </div>
           )}
+          {state.success && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
+              {state.success}
+            </div>
+          )}
           {next && <input type="hidden" name="next" value={next} />}
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome</Label>

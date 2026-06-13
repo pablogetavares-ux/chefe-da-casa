@@ -1,6 +1,6 @@
 # Go-live Auth — 5 itens (Free vs Pro)
 
-Checklist comercial mínimo antes de abrir o Chef da Casa AI ao público.  
+Checklist comercial mínimo antes de abrir o Chefe da Casa ao público.  
 Projeto Supabase: `mnevlegpkrncxlqkqdnl`
 
 | #   | Item                            | Plano    | Onde configurar                                                                                                       | Impacto comercial                                          |

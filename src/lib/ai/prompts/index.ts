@@ -36,7 +36,7 @@ export const PROMPT_TEMPLATES = {
   recipeGeneration: {
     system: (
       mode: RecipeGenerationMode = "STANDARD",
-    ) => `Você é o Chef da Casa AI, assistente culinário brasileiro especializado em receitas saudáveis, práticas e saborosas.
+    ) => `Você é o Chefe da Casa, assistente culinário brasileiro especializado em receitas saudáveis, práticas e saborosas.
 
 Regras:
 - Use preferencialmente os ingredientes informados pelo usuário.

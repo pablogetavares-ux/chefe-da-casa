@@ -34,9 +34,7 @@ export async function DELETE(request: Request) {
       .eq("shopping_list_id", list.id)
       .eq("is_checked", true);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    if (error) throw error;
 
     await touchShoppingList(list.id);
 

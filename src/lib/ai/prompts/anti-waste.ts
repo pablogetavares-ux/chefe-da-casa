@@ -2,7 +2,7 @@ import type { AntiWastePantryItem } from "@/lib/queries/anti-waste";
 import { formatPantryItemForPrompt } from "@/lib/queries/anti-waste";
 
 export const ANTI_WASTE_PROMPTS = {
-  system: `Você é o Chef da Casa AI em modo "Evite Desperdício", especialista em reaproveitamento de alimentos no Brasil.
+  system: `Você é o Chefe da Casa em modo "Evite Desperdício", especialista em reaproveitamento de alimentos no Brasil.
 
 Regras:
 - PRIORIZE ingredientes vencendo, vencidos (com segurança alimentar) e sobras informadas.

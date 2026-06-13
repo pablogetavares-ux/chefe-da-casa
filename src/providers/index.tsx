@@ -11,7 +11,7 @@ type AppProvidersProps = {
 
 /**
  * Agrupa todos os providers globais da aplicação.
- * Ordem: Auth → Query (React Query) → Toaster
+ * Ordem: Motion → Auth → Query → Toaster (ThemeProvider fica em app/layout).
  */
 export function AppProviders({ children }: AppProvidersProps) {
   return (

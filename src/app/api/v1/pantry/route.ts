@@ -1,3 +1,4 @@
+import { throwIfSupabaseError } from "@/lib/api/supabase-errors";
 import { apiError, apiSuccess } from "@/lib/api/response";
 import {
   handleApiRouteError,
@@ -25,10 +26,7 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
-
+    throwIfSupabaseError(error);
     return apiSuccess(data);
   } catch (error) {
     return handleApiRouteError(error, "GET /api/v1/pantry");
@@ -66,10 +64,7 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
-
+    throwIfSupabaseError(error);
     return apiSuccess(data, 201);
   } catch (error) {
     return handleApiRouteErrorWithPlanLimit(error, "POST /api/v1/pantry");

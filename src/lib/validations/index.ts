@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { RECIPE_GENERATION_MODES } from "@/lib/ai/constants/recipe-modes";
 import { FITNESS_GOALS } from "@/lib/fitness/constants";
+import { offerPreferencesSchema } from "@/modules/offers/types/offer-preferences";
 import { MAX_BASE64_LENGTH } from "@/lib/security/image-bytes";
 import { storagePathSchema } from "@/lib/security/schemas";
 import {
@@ -125,6 +126,17 @@ export const offerRegionUpdateSchema = z.object({
   radiusKm: offerSearchRadiusSchema,
 });
 
+const offerVerticalSlugSchema = z
+  .string()
+  .trim()
+  .regex(/^[a-z][a-z0-9_]*$/, "Vertical inválida")
+  .default("supermarket");
+
+const offerCategorySlugSchema = z
+  .string()
+  .trim()
+  .regex(/^[a-z][a-z0-9_]*$/, "Categoria inválida");
+
 export const offerListQuerySchema = z.object({
   city: z.string().min(2).max(80).optional(),
   state: z
@@ -135,6 +147,8 @@ export const offerListQuerySchema = z.object({
     .optional(),
   radiusKm: offerSearchRadiusSchema.optional(),
   scope: offerRegionScopeSchema.optional(),
+  verticalSlug: offerVerticalSlugSchema.optional(),
+  categorySlug: offerCategorySlugSchema.optional(),
   category: z
     .enum([
       "MEAT",
@@ -149,6 +163,14 @@ export const offerListQuerySchema = z.object({
     ])
     .optional(),
   q: z.string().max(100).optional(),
+  searchScope: z
+    .enum(["all", "product", "store", "category"])
+    .optional()
+    .default("all"),
+  sortBy: z
+    .enum(["relevance", "price_asc", "discount_desc"])
+    .optional()
+    .default("relevance"),
   favoritesOnly: z.coerce.boolean().optional(),
 });
 
@@ -159,6 +181,34 @@ export const offerAddToShoppingSchema = z.object({
 
 export const offerForRecipeQuerySchema = z.object({
   recipeId: z.string().uuid("Receita inválida"),
+  city: z.string().min(2).max(80).optional(),
+  state: z
+    .string()
+    .trim()
+    .length(2)
+    .transform((v) => v.toUpperCase())
+    .optional(),
+  radiusKm: offerSearchRadiusSchema.optional(),
+  scope: offerRegionScopeSchema.optional(),
+});
+
+export const offersForIngredientsBodySchema = z.object({
+  names: z
+    .array(z.string().trim().min(1, "Nome inválido").max(100))
+    .min(1, "Informe ao menos um ingrediente")
+    .max(32, "Máximo de 32 ingredientes"),
+  context: z.enum(["weekly_plan", "ingredients"]).optional(),
+  city: z.string().min(2).max(80).optional(),
+  state: z
+    .string()
+    .trim()
+    .length(2)
+    .transform((v) => v.toUpperCase())
+    .optional(),
+  radiusKm: offerSearchRadiusSchema.optional(),
+});
+
+export const offerRegionQuerySchema = z.object({
   city: z.string().min(2).max(80).optional(),
   state: z
     .string()
@@ -256,6 +306,7 @@ export const profileUpdateSchema = z
     bodyHeightCm: z.number().min(100).max(250).nullable().optional(),
     fitnessGoal: z.enum(FITNESS_GOALS).nullable().optional(),
     seniorModeEnabled: z.boolean().optional(),
+    offerPreferences: offerPreferencesSchema.optional(),
   })
   .refine(
     (data) =>
@@ -263,7 +314,8 @@ export const profileUpdateSchema = z
       data.bodyWeightKg !== undefined ||
       data.bodyHeightCm !== undefined ||
       data.fitnessGoal !== undefined ||
-      data.seniorModeEnabled !== undefined,
+      data.seniorModeEnabled !== undefined ||
+      data.offerPreferences !== undefined,
     { message: "Informe ao menos um campo para atualizar" },
   );
 

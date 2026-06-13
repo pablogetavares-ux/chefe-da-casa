@@ -17,4 +17,8 @@ export type RegionalOfferRow = Tables<"regional_offers">;
 export type RegionalStoreRow = Tables<"regional_stores">;
 export type OfferFavorite = Tables<"offer_favorites">;
 export type OfferCategory = Enums<"OfferCategory">;
+export type OfferVerticalRow = Tables<"offer_verticals">;
+export type OfferCategoryRow = Tables<"offer_categories">;
+export type MonthlyPurchaseListRow = Tables<"monthly_purchase_lists">;
+export type MonthlyPurchaseItemRow = Tables<"monthly_purchase_items">;
 `;

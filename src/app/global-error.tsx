@@ -21,7 +21,7 @@ export default function GlobalError({
 
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-background p-[env(safe-area-inset-top)_env(safe-area-inset-right)_env(safe-area-inset-bottom)_env(safe-area-inset-left)] font-sans antialiased">
         <ErrorFallback
           title="Erro crítico"
           message="Não foi possível carregar a aplicação. Recarregue a página ou tente novamente."

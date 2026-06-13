@@ -4,6 +4,38 @@ import type { Enums, Tables } from "@/types/database";
 export type OfferCategory = Enums<"OfferCategory">;
 export type RegionalOfferRow = Tables<"regional_offers">;
 export type RegionalStoreRow = Tables<"regional_stores">;
+export type OfferVerticalRow = Tables<"offer_verticals">;
+export type OfferCategoryRow = Tables<"offer_categories">;
+
+/** Vertical de mercado (supermercado, farmácia, etc.) — catálogo dinâmico. */
+export type OfferVerticalCatalogItem = {
+  id: string;
+  slug: string;
+  name: string;
+  iconKey: string | null;
+  description: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  /** Ofertas ativas na região (todas as cidades — hub). */
+  activeOfferCount?: number;
+};
+
+/** Resposta do hub Central de Ofertas. */
+export type OffersHubResponse = {
+  verticals: OfferVerticalCatalogItem[];
+};
+
+/** Categoria dinâmica por vertical — extensível sem migration. */
+export type OfferCategoryCatalogItem = {
+  id: string;
+  slug: string;
+  name: string;
+  verticalId: string;
+  verticalSlug: string;
+  legacyEnum: OfferCategory | null;
+  parentId: string | null;
+  sortOrder: number;
+};
 
 export type OfferMatchScope = "local" | "cross_city" | "none";
 
@@ -24,6 +56,8 @@ export type RegionalOffer = RegionalOfferRow & {
   distanceKm?: number | null;
   /** Classificação regional da oferta em relação à região do usuário. */
   regionScope?: OfferRegionScope | null;
+  /** Pontuação de relevância da busca (0–100), quando há termo de busca. */
+  searchRelevance?: number;
 };
 
 export type OfferAlternateCity = {
@@ -36,6 +70,11 @@ export type OffersListResponse = {
   cities: string[];
   /** Cidades com UF — preferir para novos filtros regionais. */
   regionCities: { city: string; state: string; label: string }[];
+  /** Verticais ativas (Central Multi-Ofertas). */
+  verticals: OfferVerticalCatalogItem[];
+  /** Categorias dinâmicas da vertical selecionada. */
+  categoryCatalog: OfferCategoryCatalogItem[];
+  /** @deprecated Preferir `categoryCatalog` — mantido para compatibilidade. */
   categories: OfferCategory[];
   favoriteIds: string[];
   region: import("@/modules/offers/region/types").UserOfferRegion;
@@ -44,15 +83,41 @@ export type OffersListResponse = {
     state: string | null;
     radiusKm: number;
     scope: OfferRegionScope;
+    verticalSlug: string;
+    categorySlug: string | null;
+    /** @deprecated Preferir `categorySlug`. */
     category: OfferCategory | null;
     q: string | null;
+    searchScope: import("@/modules/offers/utils/search").OfferSearchScope;
+    sortBy: import("@/modules/offers/utils/search").OfferSortBy;
+  };
+  meta?: {
+    total: number;
+    hasSearch: boolean;
+    searchExpanded?: boolean;
   };
 };
+
+export type OffersUserContextSummary = {
+  plan: import("@/types/database").Database["public"]["Enums"]["PlanTier"];
+  fitnessGoal: string | null;
+  seniorMode: boolean;
+  offerPreferences: import("@/modules/offers/types/offer-preferences").OfferPreferences;
+  priorityCategories: OfferCategory[];
+  priorityLabels: string[];
+  personalizationReason: string | null;
+};
+
+/** Modo do hero comercial no topo da receita (sem foto). */
+export type RecipeHeroMode = "ingredients" | "regional" | "explore";
 
 export type OffersForRecipeResponse = {
   recipeId: string;
   recipeTitle: string;
   offers: RegionalOffer[];
+  /** Até 3 ofertas para o hero — ingredientes ou fallback regional. */
+  heroOffers: RegionalOffer[];
+  heroMode: RecipeHeroMode;
   hasIngredientMatches: boolean;
   matchScope: OfferMatchScope;
   city: string;
@@ -63,6 +128,111 @@ export type OffersForRecipeResponse = {
   regionCities: { city: string; state: string; label: string }[];
   ingredientNames: string[];
   alternateCities: OfferAlternateCity[];
+  userContext: OffersUserContextSummary;
+};
+
+export function describeRecipeHeroMode(
+  mode: RecipeHeroMode,
+  city: string,
+  stats: {
+    heroOfferCount: number;
+    matchedIngredientLabels: string[];
+    totalOfferCount?: number;
+  },
+): string {
+  const { heroOfferCount, matchedIngredientLabels, totalOfferCount } = stats;
+  const matchedCount = matchedIngredientLabels.length;
+  const labelSample = matchedIngredientLabels.slice(0, 3).join(", ");
+  const extraLabels =
+    matchedIngredientLabels.length > 3
+      ? ` +${matchedIngredientLabels.length - 3}`
+      : "";
+
+  switch (mode) {
+    case "ingredients": {
+      if (heroOfferCount === 0) {
+        return `Promoções em ${city} ligadas aos ingredientes desta receita`;
+      }
+      const offersLabel =
+        heroOfferCount === 1 ? "1 promoção" : `${heroOfferCount} promoções`;
+      if (matchedCount > 0) {
+        const ingLabel =
+          matchedCount === 1 ? "1 ingrediente" : `${matchedCount} ingredientes`;
+        let line = `${offersLabel} em ${city} para ${ingLabel}: ${labelSample}${extraLabels}`;
+        if (totalOfferCount && totalOfferCount > heroOfferCount) {
+          line += ` — +${totalOfferCount - heroOfferCount} na lista completa`;
+        }
+        return line;
+      }
+      return `${offersLabel} em ${city} para ingredientes desta receita`;
+    }
+    case "regional":
+      return heroOfferCount > 0
+        ? `${heroOfferCount} destaque${heroOfferCount === 1 ? "" : "s"} do mercado em ${city}`
+        : `Ofertas do mercado em ${city} — aproveite enquanto cozinha`;
+    default:
+      return "Central de Ofertas — economize em toda a rotina da casa";
+  }
+}
+
+/** Ingredientes únicos com match nas ofertas (ordem de aparição). */
+export function collectMatchedIngredientLabels(
+  offers: RegionalOffer[],
+): string[] {
+  const seen = new Set<string>();
+  const labels: string[] = [];
+  for (const offer of offers) {
+    for (const ing of offer.matchedIngredients ?? []) {
+      const key = ing.toLowerCase().trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      labels.push(ing);
+    }
+  }
+  return labels;
+}
+
+export type PantryGapSource = "recipe" | "shopping_list";
+
+export type PantryGapItem = {
+  ingredientName: string;
+  source: PantryGapSource;
+  sourceLabel: string;
+};
+
+export type PantryOffersResponse = {
+  gaps: PantryGapItem[];
+  offers: RegionalOffer[];
+  hasMatches: boolean;
+  matchScope: OfferMatchScope;
+  city: string;
+  state: string;
+  radiusKm: number;
+  userContext: OffersUserContextSummary;
+};
+
+export type IngredientOffersContext =
+  | "anti_waste"
+  | "weekly_plan"
+  | "pantry"
+  | "ingredients";
+
+export type IngredientOffersResponse = {
+  ingredientNames: string[];
+  offers: RegionalOffer[];
+  hasMatches: boolean;
+  matchScope: OfferMatchScope;
+  city: string;
+  state: string;
+  radiusKm: number;
+  userContext: OffersUserContextSummary;
+  context: IngredientOffersContext;
+};
+
+export type OffersIntegrationContextResponse = {
+  userContext: OffersUserContextSummary;
+  region: import("@/modules/offers/region/types").UserOfferRegion;
+  extensions: { slug: string; name: string; status: string }[];
 };
 
 export function describeRecipeOffersScope(response: {

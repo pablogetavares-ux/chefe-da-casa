@@ -40,20 +40,7 @@ export async function fetchAdminStatsForUser(
   const admin = createAdminClient();
   const now = new Date().toISOString();
 
-  const [
-    { count: users },
-    { count: recipes },
-    { count: pantryItems },
-    { count: aiGenerations },
-    { count: activeSubscriptions },
-    { data: profiles },
-    { count: chatMessages },
-    { data: tokenAgg },
-    { count: regionalOffersActive },
-    { count: regionalStoresActive },
-    { count: offerFavorites },
-    { count: shoppingLists },
-  ] = await Promise.all([
+  const results = await Promise.all([
     admin.from("profiles").select("*", { count: "exact", head: true }),
     admin.from("recipes").select("*", { count: "exact", head: true }),
     admin.from("pantry_items").select("*", { count: "exact", head: true }),
@@ -88,6 +75,28 @@ export async function fetchAdminStatsForUser(
     admin.from("offer_favorites").select("*", { count: "exact", head: true }),
     admin.from("shopping_lists").select("*", { count: "exact", head: true }),
   ]);
+
+  const queryError = results.find(
+    (result) => "error" in result && result.error,
+  );
+  if (queryError && "error" in queryError && queryError.error) {
+    throw queryError.error;
+  }
+
+  const [
+    { count: users },
+    { count: recipes },
+    { count: pantryItems },
+    { count: aiGenerations },
+    { count: activeSubscriptions },
+    { data: profiles },
+    { count: chatMessages },
+    { data: tokenAgg },
+    { count: regionalOffersActive },
+    { count: regionalStoresActive },
+    { count: offerFavorites },
+    { count: shoppingLists },
+  ] = results;
 
   const planBreakdown = { FREE: 0, PRO: 0, FAMILY: 0 };
   for (const row of profiles ?? []) {

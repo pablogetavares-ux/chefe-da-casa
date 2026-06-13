@@ -1,5 +1,5 @@
 /**
- * Espelha o código atual em C:\dev\chef-da-casa (fora do OneDrive).
+ * Espelha o código atual em C:\dev\chefe-da-casa (fora do OneDrive).
  * Uso: npm run sync:dev
  */
 import { execSync } from "node:child_process";
@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const source = resolve(__dirname, "..");
-const target = process.env.CHEF_DEV_LOCAL_PATH ?? "C:\\dev\\chef-da-casa";
+const target =
+  process.env.CHEFE_DEV_LOCAL_PATH ??
+  process.env.CHEF_DEV_LOCAL_PATH ??
+  "C:\\dev\\chefe-da-casa";
 
 if (!existsSync("C:\\dev")) {
   mkdirSync("C:\\dev", { recursive: true });

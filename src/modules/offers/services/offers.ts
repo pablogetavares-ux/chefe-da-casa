@@ -16,6 +16,7 @@ import {
   type OfferAlternateCity,
   type OfferCategory,
   type OfferMatchScope,
+  type RecipeHeroMode,
   type RegionalOffer,
 } from "@/modules/offers/types";
 import { resolveOfferImageSrc } from "@/modules/offers/constants/offer-images";
@@ -25,6 +26,16 @@ import {
   getOfferMatchedIngredients,
   scoreOfferForRecipe,
 } from "@/modules/offers/utils/matching";
+import {
+  buildProductSearchOrFilter,
+  filterStoreIdsBySearch,
+  offerMatchesSearch,
+  scoreOfferSearchRelevance,
+  sortRegionalOffers,
+  type OfferSearchScope,
+  type OfferSortBy,
+} from "@/modules/offers/utils/search";
+import type { OfferCategoryCatalogItem } from "@/modules/offers/types";
 import { getOffersSchemaCapability } from "@/modules/offers/region/schema-capability";
 import {
   fetchActiveRegionalStores,
@@ -139,15 +150,76 @@ type QueryRegionalOffersOptions = {
   /** Região completa com raio — prioridade sobre `city` simples. */
   region?: UserOfferRegion | null;
   scope?: OfferRegionScope;
+  /** Vertical de mercado (Central Multi-Ofertas). */
+  verticalId?: string | null;
+  /** Categoria dinâmica (prioridade sobre enum legado). */
+  categoryId?: string | null;
+  /** @deprecated Preferir `categoryId` / slug via catálogo. */
   category?: OfferCategory | null;
   q?: string | null;
+  searchScope?: OfferSearchScope;
+  sortBy?: OfferSortBy;
+  categoryCatalog?: OfferCategoryCatalogItem[];
   favoritesOnly?: boolean;
   limit?: number;
   /** Evita segunda leitura de `regional_stores` na mesma request. */
   stores?: RegionalStoreGeo[];
 };
 
+export type RegionalOffersQueryResult = {
+  offers: RegionalOffer[];
+  searchExpanded: boolean;
+};
+
+export async function queryRegionalOffersWithMeta(
+  supabase: Client,
+  options: QueryRegionalOffersOptions,
+): Promise<RegionalOffersQueryResult> {
+  const scope = options.scope ?? "within_radius";
+  const searchTerm = options.q?.trim() ?? "";
+  const hasSearch = searchTerm.length >= 2;
+
+  const primary = await executeRegionalOffersQuery(supabase, options);
+
+  if (
+    primary.length === 0 &&
+    hasSearch &&
+    scope !== "national" &&
+    options.region
+  ) {
+    const expanded = await executeRegionalOffersQuery(supabase, {
+      ...options,
+      scope: "national",
+    });
+
+    if (expanded.length > 0) {
+      return {
+        offers: expanded.map((offer) => ({
+          ...offer,
+          isCrossCity: !isSameCity(
+            offer.store.city,
+            offer.store.state,
+            options.region!.city,
+            options.region!.state,
+          ),
+        })),
+        searchExpanded: true,
+      };
+    }
+  }
+
+  return { offers: primary, searchExpanded: false };
+}
+
 export async function queryRegionalOffers(
+  supabase: Client,
+  options: QueryRegionalOffersOptions,
+): Promise<RegionalOffer[]> {
+  const { offers } = await queryRegionalOffersWithMeta(supabase, options);
+  return offers;
+}
+
+async function executeRegionalOffersQuery(
   supabase: Client,
   options: QueryRegionalOffersOptions,
 ): Promise<RegionalOffer[]> {
@@ -158,6 +230,11 @@ export async function queryRegionalOffers(
   }
 
   const scope = options.scope ?? "within_radius";
+  const searchScope = options.searchScope ?? "all";
+  const sortBy = options.sortBy ?? "relevance";
+  const categoryCatalog = options.categoryCatalog ?? [];
+  const searchTerm = options.q?.trim() ?? "";
+  const hasSearch = searchTerm.length >= 2;
   const cap = await getOffersSchemaCapability(supabase);
   const useGeoRegion = Boolean(options.region?.radiusKm) && cap.storeGeo;
 
@@ -169,7 +246,10 @@ export async function queryRegionalOffers(
 
   if (useGeoRegion && options.region) {
     const stores =
-      options.stores ?? (await fetchActiveRegionalStores(supabase));
+      options.stores ??
+      (await fetchActiveRegionalStores(supabase, {
+        verticalId: options.verticalId,
+      }));
     const matches = filterStoresByRegionScope(stores, options.region, scope);
     storeIdFilter = matches.map((entry) => entry.store.id);
     for (const match of matches) {
@@ -181,13 +261,33 @@ export async function queryRegionalOffers(
     if (storeIdFilter.length === 0) return [];
   }
 
+  const regionStores =
+    options.stores ??
+    (storeIdFilter
+      ? null
+      : await fetchActiveRegionalStores(supabase, {
+          verticalId: options.verticalId,
+        }));
+
+  if (hasSearch && (searchScope === "store" || searchScope === "all")) {
+    const storePool = regionStores ?? [];
+    const matchedStoreIds = filterStoreIdsBySearch(storePool, searchTerm);
+    if (searchScope === "store") {
+      if (matchedStoreIds.length === 0) return [];
+      storeIdFilter = storeIdFilter
+        ? storeIdFilter.filter((id) => matchedStoreIds.includes(id))
+        : matchedStoreIds;
+      if (storeIdFilter.length === 0) return [];
+    }
+  }
+
   let query = supabase
     .from("regional_offers")
     .select(OFFER_SELECT)
     .eq("is_active", true)
     .gt("valid_until", new Date().toISOString())
     .order("valid_until", { ascending: true })
-    .limit(options.limit ?? 48);
+    .limit(options.limit ?? (hasSearch ? 96 : 48));
 
   if (storeIdFilter) {
     query = query.in("store_id", storeIdFilter);
@@ -197,12 +297,21 @@ export async function queryRegionalOffers(
     query = query.eq("store.city", options.region.city);
   }
 
-  if (options.category) {
+  if (options.categoryId) {
+    query = query.eq("category_id", options.categoryId);
+  } else if (options.category) {
     query = query.eq("category", options.category);
   }
 
   if (options.favoritesOnly) {
     query = query.in("id", [...favoriteIds]);
+  }
+
+  if (hasSearch && searchScope === "product" && cap.offerSearchIndexes) {
+    const orFilter = buildProductSearchOrFilter(searchTerm);
+    if (orFilter) {
+      query = query.or(orFilter);
+    }
   }
 
   const { data, error } = await query;
@@ -222,27 +331,31 @@ export async function queryRegionalOffers(
     );
   }
 
-  if (options.q?.trim()) {
-    const term = options.q.trim().toLowerCase();
-    rows = rows.filter(
-      (row) =>
-        row.title.toLowerCase().includes(term) ||
-        row.product_name.toLowerCase().includes(term) ||
-        row.store.name.toLowerCase().includes(term) ||
-        row.store.chain.toLowerCase().includes(term),
-    );
-  }
-
-  const mapped = rows.map((row) => {
+  let mapped = rows.map((row) => {
     const meta = storeMeta.get(row.store_id);
     return mapOfferRow(row, favoriteIds, meta);
   });
 
-  if (useGeoRegion) {
-    return mapped.sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
+  if (hasSearch) {
+    mapped = mapped
+      .filter((offer) =>
+        offerMatchesSearch(offer, searchTerm, searchScope, categoryCatalog),
+      )
+      .map((offer) => ({
+        ...offer,
+        searchRelevance: scoreOfferSearchRelevance(
+          offer,
+          searchTerm,
+          searchScope,
+          categoryCatalog,
+        ),
+      }));
   }
 
-  return mapped;
+  return sortRegionalOffers(mapped, sortBy, {
+    hasQuery: hasSearch,
+    preferDistance: useGeoRegion && sortBy === "relevance" && !hasSearch,
+  });
 }
 
 type ScoredOffer = {
@@ -322,7 +435,7 @@ export async function queryOffersForRecipe(
   const ingredientTerms = extractRecipeIngredientTerms(recipe);
   const ingredientNames = extractRecipeIngredientNames(recipe);
 
-  const allOffers = await queryRegionalOffers(supabase, {
+  const { offers: allOffers } = await queryRegionalOffersWithMeta(supabase, {
     userId,
     limit: region ? 64 : 48,
     region: region ?? undefined,
@@ -386,6 +499,45 @@ export async function queryOffersForRecipe(
     alternateCities: buildAlternateCities(globalMatches, selectedCity),
     offers: [],
   };
+}
+
+/** Hero comercial da receita — ingredientes ou fallback de supermercado regional. */
+export async function queryRecipeHeroOffers(
+  supabase: Client,
+  userId: string,
+  matchedOffers: RegionalOffer[],
+  options: {
+    region?: UserOfferRegion | null;
+    scope?: OfferRegionScope;
+    stores?: RegionalStoreGeo[];
+    verticalId?: string | null;
+  },
+): Promise<{ heroOffers: RegionalOffer[]; heroMode: RecipeHeroMode }> {
+  if (matchedOffers.length > 0) {
+    return {
+      heroOffers: matchedOffers.slice(0, 3),
+      heroMode: "ingredients",
+    };
+  }
+
+  const { offers } = await queryRegionalOffersWithMeta(supabase, {
+    userId,
+    limit: 9,
+    region: options.region ?? undefined,
+    scope: options.scope ?? "within_radius",
+    verticalId: options.verticalId ?? undefined,
+    stores: options.stores,
+    sortBy: "discount_desc",
+  });
+
+  if (offers.length > 0) {
+    return {
+      heroOffers: offers.slice(0, 3),
+      heroMode: "regional",
+    };
+  }
+
+  return { heroOffers: [], heroMode: "explore" };
 }
 
 export async function getOfferById(

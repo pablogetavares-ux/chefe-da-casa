@@ -5,14 +5,14 @@ import { termsSections } from "@/config/legal-content";
 
 export const metadata: Metadata = {
   title: "Termos de Uso",
-  description: "Termos e condições de uso do Chef da Casa AI.",
+  description: "Termos e condições de uso do Chefe da Casa.",
 };
 
 export default function TermsPage() {
   return (
     <LegalDocument
       title="Termos de Uso"
-      description="Regras para utilização da plataforma Chef da Casa AI."
+      description="Regras para utilização da plataforma Chefe da Casa."
       sections={termsSections}
     />
   );

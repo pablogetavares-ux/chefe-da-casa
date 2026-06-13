@@ -133,7 +133,12 @@ export function MarketsComparisonPanel() {
           <Store className="size-4" />
           Tabela comparativa
         </h3>
-        <div className="overflow-x-auto rounded-xl border">
+        <div
+          className="overflow-x-auto overscroll-x-contain rounded-xl border"
+          role="region"
+          aria-label="Tabela comparativa — deslize horizontalmente no celular"
+          tabIndex={0}
+        >
           <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b bg-muted/50 text-left">

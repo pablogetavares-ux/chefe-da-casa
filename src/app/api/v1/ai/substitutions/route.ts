@@ -2,6 +2,8 @@ import { suggestSubstitutionsWithAI } from "@/lib/ai/services/substitutions";
 import { substitutionsSchema } from "@/lib/validations";
 import { handleAiRecipeMetadataUpdate } from "@/modules/ai/services/recipe-mutation-route";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   return handleAiRecipeMetadataUpdate(request, {
     schema: substitutionsSchema,

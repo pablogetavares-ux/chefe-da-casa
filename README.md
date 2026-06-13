@@ -1,6 +1,6 @@
-# Chef da Casa AI
+# Chefe da Casa
 
-> **Desenvolvimento:** use `C:\dev\chef-da-casa` · sequência do projeto: [docs/SEQUENCIA.md](docs/SEQUENCIA.md)
+> **Desenvolvimento:** use `C:\dev\chefe-da-casa` · sequência do projeto: [docs/SEQUENCIA.md](docs/SEQUENCIA.md)
 
 SaaS culinário com IA — crie receitas saudáveis com os ingredientes que você já tem em casa.
 
@@ -28,6 +28,14 @@ npm run dev
 
 Acesse [http://localhost:3000](http://localhost:3000).
 
+### Testar no Android (Moto G75 e similares)
+
+```bash
+npm run dev:mobile   # expõe na rede local (mesma Wi‑Fi)
+```
+
+Guia completo: [docs/MOBILE-DEV.md](./docs/MOBILE-DEV.md)
+
 ## Documentação
 
 | Documento                                    | Descrição                                 |
@@ -39,12 +47,14 @@ Acesse [http://localhost:3000](http://localhost:3000).
 | [docs/DEPLOY.md](./docs/DEPLOY.md)           | **Deploy Vercel + checklist**             |
 | [docs/BILLING.md](./docs/BILLING.md)         | Stripe e planos                           |
 | [docs/AUTH.md](./docs/AUTH.md)               | Autenticação Supabase                     |
+| [docs/MOBILE-DEV.md](./docs/MOBILE-DEV.md)   | **Teste no celular Android**              |
 
 ## Scripts
 
 | Comando                | Descrição                       |
 | ---------------------- | ------------------------------- |
 | `npm run dev`          | Servidor de desenvolvimento     |
+| `npm run dev:mobile`   | Dev na rede local (celular)     |
 | `npm run build`        | Build de produção               |
 | `npm run lint`         | ESLint                          |
 | `npm run lint:fix`     | ESLint com auto-fix             |

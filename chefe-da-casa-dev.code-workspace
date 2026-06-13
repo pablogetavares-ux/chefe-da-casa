@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "Chefe da Casa (dev local)",
+      "path": "C:\\dev\\chefe-da-casa",
+    },
+  ],
+  "settings": {
+    "terminal.integrated.cwd": "C:\\dev\\chefe-da-casa",
+  },
+}

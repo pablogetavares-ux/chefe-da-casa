@@ -12,7 +12,12 @@ const PROJECT_ID = "mnevlegpkrncxlqkqdnl";
 const REQUIRED_TABLES = [
   "regional_offers",
   "regional_stores",
+  "offer_verticals",
+  "offer_categories",
   "offer_favorites",
+  "offer_extension_registry",
+  "offer_market_catalog",
+  "offer_cashback_entries",
   "profiles",
   "recipes",
   "pantry_items",
@@ -26,7 +31,15 @@ const REQUIRED_TABLES = [
 
 const REQUIRED_API_ROUTES = [
   "src/app/api/v1/offers/route.ts",
+  "src/app/api/v1/offers/hub/route.ts",
+  "src/app/api/v1/offers/context/route.ts",
   "src/app/api/v1/offers/for-recipe/route.ts",
+  "src/app/api/v1/offers/for-pantry/route.ts",
+  "src/app/api/v1/offers/for-anti-waste/route.ts",
+  "src/app/api/v1/offers/for-ingredients/route.ts",
+  "src/app/api/v1/offers/region/route.ts",
+  "src/app/api/v1/offers/stores/route.ts",
+  "src/app/api/v1/offers/favorites/route.ts",
   "src/app/api/v1/offers/add-to-shopping/route.ts",
   "src/app/api/v1/home/route.ts",
   "src/app/api/v1/pricing/compare/route.ts",
@@ -129,6 +142,7 @@ async function main() {
     "homeFeedQueryKey",
     "SHOPPING_INVALIDATION",
     "pricingCompareQueryKey",
+    "OFFERS_FULL_INVALIDATION",
   ]) {
     if (queryKeys.includes(symbol)) ok(symbol);
     else fail(symbol);
@@ -141,6 +155,9 @@ async function main() {
     if (health.ok) {
       const body = await health.json();
       ok("/api/health", body?.status ?? "ok");
+      if (body?.service === "chefe-da-casa")
+        ok("health: service chefe-da-casa");
+      else fail("health: service", String(body?.service));
       if (body?.checks?.supabase === "ok") ok("health: supabase");
       else fail("health: supabase", String(body?.checks?.supabase));
     } else {
@@ -177,7 +194,18 @@ async function main() {
     if (client.includes(`${domain}: {`)) ok(`api.${domain}`);
     else fail(`api.${domain}`);
   }
-  for (const method of ["list", "forRecipe", "addToShopping", "addFavorite"]) {
+  for (const method of [
+    "list",
+    "getHub",
+    "forRecipe",
+    "forPantry",
+    "forAntiWaste",
+    "forIngredients",
+    "getIntegrationContext",
+    "getRegion",
+    "addToShopping",
+    "addFavorite",
+  ]) {
     if (client.includes(`${method}:`)) ok(`api.offers.${method}`);
     else fail(`api.offers.${method}`);
   }

@@ -1,6 +1,8 @@
 import type { ChatMessageInput } from "@/types";
 
-const CULINARY_SYSTEM = `Você é o Chef da Casa, assistente culinário brasileiro amigável e prático.
+import { withRetry } from "@/lib/ai/core/retry";
+
+const CULINARY_SYSTEM = `Você é o Chefe da Casa, assistente culinário brasileiro amigável e prático.
 Responda em português do Brasil, com tom acolhedor e objetivo.
 Ajude com receitas, substituições, técnicas, meal prep, nutrição básica e uso da despensa.
 Respostas concisas (máximo 3 parágrafos curtos) salvo se o usuário pedir detalhes.`;
@@ -40,20 +42,27 @@ export async function chatWithChef(
   }
 
   const { getOpenAIClient } = await import("@/lib/ai/client");
+  const { createOpenAiAbortSignal } =
+    await import("@/lib/ai/core/openai-timeout");
   const client = getOpenAIClient();
 
-  const completion = await client.chat.completions.create({
-    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-    temperature: 0.7,
-    max_tokens: 600,
-    messages: [
-      { role: "system", content: CULINARY_SYSTEM },
-      ...messages.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
-    ],
-  });
+  const completion = await withRetry(() =>
+    client.chat.completions.create(
+      {
+        model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+        temperature: 0.7,
+        max_tokens: 600,
+        messages: [
+          { role: "system", content: CULINARY_SYSTEM },
+          ...messages.map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
+        ],
+      },
+      { signal: createOpenAiAbortSignal() },
+    ),
+  );
 
   const reply =
     completion.choices[0]?.message?.content?.trim() ??

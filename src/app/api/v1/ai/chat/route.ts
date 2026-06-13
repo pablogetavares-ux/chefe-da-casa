@@ -3,7 +3,7 @@ import { z } from "zod";
 import { assertAiRateLimit, mapAiRouteError } from "@/lib/ai/route-utils";
 import { assertAiGenerationAllowed } from "@/lib/billing/plan-limits";
 import { chatWithChef } from "@/lib/ai/services/chat";
-import { apiSuccess } from "@/lib/api/response";
+import { apiError, apiSuccess } from "@/lib/api/response";
 import { requireAuthUser } from "@/lib/api/auth";
 import { recordUsage } from "@/lib/observability/usage";
 import { logger } from "@/lib/observability/logger";
@@ -24,16 +24,27 @@ const chatSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await requireAuthUser();
+    const user = await requireAuthUser(request);
     await assertAiRateLimit(user.id);
     await assertAiGenerationAllowed(user.id);
 
-    const body = chatSchema.parse(await request.json());
-    const result = await chatWithChef(body.messages);
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError("JSON inválido", 400, "VALIDATION_ERROR");
+    }
+
+    const parsed = chatSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError("Dados inválidos", 400, "VALIDATION_ERROR");
+    }
+
+    const result = await chatWithChef(parsed.data.messages);
 
     await recordUsage(user.id, "ai.chat", {
       mock: result.mock,
-      messageCount: body.messages.length,
+      messageCount: parsed.data.messages.length,
     });
 
     logger.info("ai.chat.completed", {

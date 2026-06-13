@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CreditCard, FlaskConical, Sparkles } from "lucide-react";
+import { CreditCard, FlaskConical, RefreshCw, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/card";
 import { PLANS, type PlanId } from "@/config/plans";
 import { ErrorFallback } from "@/components/shared/error-fallback";
+import {
+  deriveBillingHealth,
+  shouldShowBillingBanner,
+} from "@/lib/billing/subscription-state";
 import {
   useBillingCheckout,
   useBillingPortal,
@@ -34,12 +38,15 @@ export function BillingSection({
   billingAvailable,
   billingMock = false,
 }: BillingSectionProps) {
-  const { data, isLoading, error } = useBillingSubscription();
+  const { data, isLoading, error, refetch, isFetching } =
+    useBillingSubscription();
   const checkout = useBillingCheckout();
   const portal = useBillingPortal();
 
   const currentPlan = data?.plan ?? "FREE";
   const subscription = data?.subscription;
+  const billingHealth =
+    data?.billingHealth ?? deriveBillingHealth(currentPlan, subscription);
   const hasPaidPlan = currentPlan !== "FREE";
   const canManage =
     !billingMock &&
@@ -63,6 +70,7 @@ export function BillingSection({
             compact
             title="Erro ao carregar assinatura"
             message={error.message}
+            reset={() => void refetch()}
           />
         ) : (
           <>
@@ -74,7 +82,50 @@ export function BillingSection({
               {subscription?.cancel_at_period_end && (
                 <Badge variant="outline">Cancela ao fim do período</Badge>
               )}
+              {subscription?.status && subscription.status !== "ACTIVE" && (
+                <Badge variant="outline">{subscription.status}</Badge>
+              )}
             </div>
+
+            {shouldShowBillingBanner(billingHealth) && (
+              <div
+                role="status"
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-sm text-amber-950 dark:text-amber-100"
+              >
+                <p className="font-medium">{billingHealth.title}</p>
+                <p className="mt-1 text-pretty opacity-90">
+                  {billingHealth.message}
+                </p>
+                {billingHealth.recoverable && billingAvailable && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(billingHealth.state === "past_due" ||
+                      billingHealth.state === "unpaid" ||
+                      billingHealth.state === "incomplete") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={portal.isPending}
+                        onClick={() => portal.mutate()}
+                      >
+                        {portal.isPending
+                          ? "Abrindo..."
+                          : "Regularizar pagamento"}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="gap-2"
+                      disabled={isFetching}
+                      onClick={() => void refetch()}
+                    >
+                      <RefreshCw className="size-3.5" />
+                      {isFetching ? "Atualizando..." : "Atualizar status"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {billingMock && (
               <div

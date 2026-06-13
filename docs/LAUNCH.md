@@ -1,4 +1,4 @@
-# Go-live — Chef da Casa AI
+# Go-live — Chefe da Casa
 
 Checklist para lançamento comercial. O código está completo; o restante é configuração externa.
 

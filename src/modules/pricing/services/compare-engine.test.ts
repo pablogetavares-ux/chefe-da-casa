@@ -22,6 +22,7 @@ function mockOffer(input: {
     title: input.productName,
     description: null,
     category: "PANTRY",
+    category_id: null,
     product_name: input.productName,
     current_price: input.price,
     previous_price: input.price + 2,
@@ -44,6 +45,7 @@ function mockOffer(input: {
       longitude: -43.9345,
       is_active: true,
       created_at: new Date().toISOString(),
+      vertical_id: null,
     },
   };
 }

@@ -1,4 +1,4 @@
-// Chef da Casa AI — Schema Prisma
+// Chefe da Casa — Schema Prisma
 // Fonte de verdade do domínio. Migrações aplicadas no Supabase PostgreSQL.
 //
 // RLS strategy (Supabase):

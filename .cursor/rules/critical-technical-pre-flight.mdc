@@ -1,0 +1,77 @@
+---
+description: Análise técnica obrigatória antes/depois de toda tarefa — integração, MCP, prod, segurança
+alwaysApply: true
+---
+
+# REGRA CRÍTICA — Pré-voo técnico (permanente)
+
+Antes de **qualquer** tarefa (feature, correção, refatoração, integração, auditoria, deploy):
+
+1. Analisar os 17 eixos abaixo.
+2. **Nunca** assumir que o usuário listou todas as dependências.
+3. Implementar automaticamente o que for seguro; **avisar antes** o que for estrutural, crítico ou exigir decisão/config externa.
+
+## 17 eixos (checklist mental)
+
+| # | Eixo | Pergunta-chave |
+|---|------|----------------|
+| 1 | Frontend ↔ backend | UI muda dados? Hook → `/api/*` → DB? |
+| 2 | MCP | Schema, tipos, RLS, advisors Supabase? |
+| 3 | API externa | OpenAI, Stripe, Turnstile, RevenueCat, etc.? |
+| 4 | Banco de dados | Migration, RLS, índices, seeds? |
+| 5 | Autenticação | Login, OAuth, sessão, cookies, Bearer? |
+| 6 | Autorização | Premium, admin, RLS, plano? |
+| 7 | Variáveis de ambiente | `.env` / Vercel — novas keys? |
+| 8 | Webhooks | Stripe, RevenueCat — secrets, idempotência? |
+| 9 | Terceiros | Dashboard/config fora do código? |
+| 10 | Segurança | Vazamento, rate limit, CAPTCHA, sanitização? |
+| 11 | Logs / monitoramento | Sentry, health, audit trail? |
+| 12 | Erros | Empty/loading/error, retry, mensagens seguras? |
+| 13 | Performance | N+1, índices, cache, bundle? |
+| 14 | Escalabilidade | Upstash, stateless, quotas? |
+| 15 | Custos | OpenAI tokens, Stripe, Supabase tier? |
+| 16 | Produção | mocks off, URL real, go-live blockers? |
+| 17 | Dependências ocultas | Módulos compartilhados, tipos, e2e, scripts? |
+
+## Formato na **primeira resposta** da tarefa
+
+Incluir bloco **`Pré-voo técnico`** (máx. 12 linhas):
+
+- **Escopo:** o que será feito
+- **Eixos necessários:** lista numerada dos que aplicam (ou “nenhum — só UI/copy”)
+- **Pré-requisitos do usuário:** só o mínimo (dev rodando, `.env`, MCP, auth/billing se aplicável) — **sem secrets no chat**
+- **Ação:** “implemento + valido” vs “preciso confirmação antes”
+
+Se **nenhum** eixo 1–17 aplicar → uma linha: `Pré-voo: tarefa isolada, sem integração.`
+
+## Durante a implementação
+
+- Executar integração/MCP/validação **proativamente** — usuário não precisa pedir “via MCP”.
+- Correções seguras: aplicar. **Crítico/estrutural:** recomendar, não alterar sem confirmação explícita.
+
+## Ao **finalizar** toda tarefa
+
+Bloco **`Pendências pós-tarefa`** quando existir algo nos eixos 1–17:
+
+- Config externa (Vercel, Supabase Dashboard, Stripe)
+- Testes não rodados e por quê
+- Riscos residuais (segurança, custo, prod)
+- Comandos de verificação executados e resultado
+
+Se zero pendências relevantes → omitir bloco (não encher linguiça).
+
+## Comandos padrão deste projeto (após mudanças integradas)
+
+```bash
+npm run validate
+npm run integration:mcp   # se front+back+DB
+npm run test:smoke        # se auth/API
+npm test
+npm run build             # se deploy/release
+```
+
+Referências: `docs/INTEGRATION.md` · `docs/LAUNCH.md` · `docs/PRODUCTION.md` · Supabase `mnevlegpkrncxlqkqdnl`.
+
+## Novo projeto (qualquer repo)
+
+Na primeira sessão full-stack: checklist `.env`, MCP, migrations, script de integração, mapa UI→API, blockers de go-live.

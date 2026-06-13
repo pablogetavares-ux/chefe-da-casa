@@ -1,4 +1,4 @@
-# Roadmap Técnico — Chef da Casa AI
+# Roadmap Técnico — Chefe da Casa
 
 > Atualizado **30/05/2026**. A maior parte das fases iniciais já está implementada.
 
@@ -23,7 +23,7 @@
 - [x] Home com uso do plano e atalhos
 - [x] Comparador de preços (gate Premium web)
 - [x] App mobile Expo + RevenueCat (scaffold)
-- [x] Auditoria MCP + `C:\dev\chef-da-casa`
+- [x] Auditoria MCP + `C:\dev\chefe-da-casa`
 - [ ] Deploy Vercel + domínio
 - [ ] Stripe live + webhooks produção
 - [ ] Google Play + RevenueCat produção

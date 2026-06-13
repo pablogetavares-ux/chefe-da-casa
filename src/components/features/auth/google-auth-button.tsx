@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { useAuthCaptcha } from "@/components/features/auth/auth-captcha";
 import { Button } from "@/components/ui/button";
@@ -18,29 +18,41 @@ export function GoogleAuthButton({
   label = "Continuar com Google",
 }: GoogleAuthButtonProps) {
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const { enabled, isReady, token } = useAuthCaptcha();
   const blocked = pending || (enabled && !isReady);
 
   function handleClick() {
+    setError(null);
     startTransition(async () => {
       const formData = new FormData();
       if (next) formData.set("next", next);
       if (token) formData.set(CAPTCHA_FORM_FIELD, token);
-      await signInWithGoogleAction(formData);
+      const result = await signInWithGoogleAction(formData);
+      if (result?.error) {
+        setError(result.error);
+      }
     });
   }
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      className="h-10 w-full gap-2"
-      disabled={blocked}
-      onClick={handleClick}
-    >
-      {pending ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
-      {pending ? "Redirecionando..." : label}
-    </Button>
+    <div className="w-full space-y-2">
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        className="h-10 w-full gap-2"
+        disabled={blocked}
+        onClick={handleClick}
+      >
+        {pending ? <Loader2 className="size-4 animate-spin" /> : <GoogleIcon />}
+        {pending ? "Redirecionando..." : label}
+      </Button>
+    </div>
   );
 }
 

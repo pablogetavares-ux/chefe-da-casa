@@ -1,4 +1,4 @@
-# Setup do Ambiente — Chef da Casa AI
+# Setup do Ambiente — Chefe da Casa
 
 ## Stack configurada
 

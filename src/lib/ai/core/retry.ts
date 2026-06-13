@@ -24,6 +24,8 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+import { isOpenAiTimeoutError } from "@/lib/ai/core/openai-timeout";
+
 export async function withRetry<T>(
   fn: () => Promise<T>,
   options: RetryOptions = {},
@@ -38,6 +40,9 @@ export async function withRetry<T>(
       return await fn();
     } catch (error) {
       lastError = error;
+      if (isOpenAiTimeoutError(error)) {
+        throw new Error("AI_TIMEOUT");
+      }
       const shouldRetry = attempt < maxAttempts && isRetryableError(error);
       if (!shouldRetry) break;
       await sleep(baseDelayMs * attempt);

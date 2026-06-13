@@ -1,3 +1,4 @@
+import { throwIfSupabaseError } from "@/lib/api/supabase-errors";
 import { apiError, apiSuccess } from "@/lib/api/response";
 import {
   handleApiRouteError,
@@ -20,9 +21,7 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    throwIfSupabaseError(error);
 
     const recipes = (data ?? [])
       .map((row) => row.recipes)
@@ -77,7 +76,7 @@ export async function POST(request: Request) {
       if (error.code === "23505") {
         return apiError("Receita já está nos favoritos", 409);
       }
-      return apiError(error.message, 500);
+      throw error;
     }
 
     return apiSuccess({ id: data.id, recipeId: parsed.data.recipeId }, 201);
@@ -102,9 +101,7 @@ export async function DELETE(request: Request) {
       .eq("user_id", user.id)
       .eq("recipe_id", recipeId);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    throwIfSupabaseError(error);
 
     return apiSuccess({ recipeId });
   } catch (error) {

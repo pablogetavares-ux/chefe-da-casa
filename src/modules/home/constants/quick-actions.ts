@@ -28,6 +28,13 @@ export const HOME_QUICK_ACTIONS: HomeQuickAction[] = [
     accent: "amber",
   },
   {
+    id: "offers",
+    label: "Ofertas",
+    description: "Promoções na região",
+    href: "/app/offers",
+    accent: "rose",
+  },
+  {
     id: "monthly-purchases",
     label: "Do mês",
     description: "Gastos fixos",
@@ -54,13 +61,6 @@ export const HOME_QUICK_ACTIONS: HomeQuickAction[] = [
     description: "Seus números",
     href: "/app/economy",
     accent: "emerald",
-  },
-  {
-    id: "offers",
-    label: "Ofertas",
-    description: "Promoções",
-    href: "/app/offers",
-    accent: "rose",
   },
   {
     id: "pantry",

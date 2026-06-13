@@ -8,6 +8,7 @@ import { User } from "lucide-react";
 import { ChangePasswordForm } from "@/components/features/profile/change-password-form";
 import { BillingSection } from "@/components/features/profile/billing-section";
 import { FitnessProfileSection } from "@/components/features/profile/fitness-profile-section";
+import { OfferPreferencesSection } from "@/components/features/profile/offer-preferences-section";
 import { PrivacyDataSection } from "@/components/features/profile/privacy-data-section";
 import { SeniorModeSection } from "@/components/features/profile/senior-mode-section";
 import { AnimatedPage } from "@/components/shared/motion";
@@ -129,6 +130,8 @@ export function ProfilePanel({
       <FitnessProfileSection profile={profile!} />
 
       <SeniorModeSection profile={profile!} />
+
+      <OfferPreferencesSection />
 
       <Card className="surface-card">
         <CardHeader>

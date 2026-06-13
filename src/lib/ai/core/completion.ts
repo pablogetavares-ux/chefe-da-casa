@@ -2,6 +2,7 @@ import type OpenAI from "openai";
 import type { z } from "zod";
 
 import { AI_CONFIG, getOpenAIClient } from "@/lib/ai/client";
+import { createOpenAiAbortSignal } from "@/lib/ai/core/openai-timeout";
 import { withRetry } from "@/lib/ai/core/retry";
 
 export type StructuredCompletionParams<T extends z.ZodType> = {
@@ -38,19 +39,22 @@ export async function createStructuredCompletion<T extends z.ZodType>(
   const startedAt = Date.now();
 
   const completion = await withRetry(() =>
-    client.chat.completions.create({
-      model: AI_CONFIG.model,
-      temperature: params.temperature ?? AI_CONFIG.temperature,
-      max_tokens: params.maxTokens ?? AI_CONFIG.maxTokens,
-      messages: [
-        { role: "system", content: params.system },
-        { role: "user", content: params.user },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: params.schema,
+    client.chat.completions.create(
+      {
+        model: AI_CONFIG.model,
+        temperature: params.temperature ?? AI_CONFIG.temperature,
+        max_tokens: params.maxTokens ?? AI_CONFIG.maxTokens,
+        messages: [
+          { role: "system", content: params.system },
+          { role: "user", content: params.user },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: params.schema,
+        },
       },
-    }),
+      { signal: createOpenAiAbortSignal() },
+    ),
   );
 
   const content = completion.choices[0]?.message?.content;
@@ -58,7 +62,14 @@ export async function createStructuredCompletion<T extends z.ZodType>(
     throw new Error("OPENAI_EMPTY_RESPONSE");
   }
 
-  const parsed = params.zodSchema.safeParse(JSON.parse(content));
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(content);
+  } catch {
+    throw new Error("OPENAI_INVALID_RESPONSE");
+  }
+
+  const parsed = params.zodSchema.safeParse(parsedJson);
   if (!parsed.success) {
     throw new Error("OPENAI_INVALID_RESPONSE");
   }
@@ -91,20 +102,23 @@ export async function createStructuredCompletionStream<T extends z.ZodType>(
   const startedAt = Date.now();
 
   const stream = await withRetry(() =>
-    client.chat.completions.create({
-      model: AI_CONFIG.model,
-      temperature: params.temperature ?? AI_CONFIG.temperature,
-      max_tokens: params.maxTokens ?? AI_CONFIG.maxTokens,
-      stream: true,
-      messages: [
-        { role: "system", content: params.system },
-        { role: "user", content: params.user },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: params.schema,
+    client.chat.completions.create(
+      {
+        model: AI_CONFIG.model,
+        temperature: params.temperature ?? AI_CONFIG.temperature,
+        max_tokens: params.maxTokens ?? AI_CONFIG.maxTokens,
+        stream: true,
+        messages: [
+          { role: "system", content: params.system },
+          { role: "user", content: params.user },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: params.schema,
+        },
       },
-    }),
+      { signal: createOpenAiAbortSignal() },
+    ),
   );
 
   let fullText = "";
@@ -156,7 +170,14 @@ export function createSseStream(
         controller.close();
       } catch (error) {
         send("error", {
-          message: error instanceof Error ? error.message : "Erro desconhecido",
+          message:
+            error instanceof Error && error.message === "AI_TIMEOUT"
+              ? "A geração demorou demais. Tente novamente."
+              : "Falha na operação de IA. Tente novamente.",
+          code:
+            error instanceof Error && error.message === "AI_TIMEOUT"
+              ? "AI_TIMEOUT"
+              : "AI_ERROR",
         });
         controller.close();
       }

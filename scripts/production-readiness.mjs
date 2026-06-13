@@ -29,7 +29,7 @@ function get(name) {
   return process.env[name] || fileEnv[name] || "";
 }
 
-console.log("=== Produção — Chef da Casa AI ===\n");
+console.log("=== Produção — Chefe da Casa ===\n");
 
 const deployCheck = spawnSync(
   "node",

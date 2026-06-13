@@ -16,25 +16,25 @@ export type Database = {
     Tables: {
       account_privacy_events: {
         Row: {
-          id: string;
-          user_id: string;
-          event_type: string;
-          metadata: Json | null;
           created_at: string;
+          event_type: string;
+          id: string;
+          metadata: Json | null;
+          user_id: string;
         };
         Insert: {
-          id?: string;
-          user_id: string;
-          event_type: string;
-          metadata?: Json | null;
           created_at?: string;
+          event_type: string;
+          id?: string;
+          metadata?: Json | null;
+          user_id: string;
         };
         Update: {
-          id?: string;
-          user_id?: string;
-          event_type?: string;
-          metadata?: Json | null;
           created_at?: string;
+          event_type?: string;
+          id?: string;
+          metadata?: Json | null;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -218,42 +218,6 @@ export type Database = {
           },
         ];
       };
-      offer_favorites: {
-        Row: {
-          created_at: string;
-          id: string;
-          offer_id: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          offer_id: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          offer_id?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "offer_favorites_offer_id_fkey";
-            columns: ["offer_id"];
-            isOneToOne: false;
-            referencedRelation: "regional_offers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "offer_favorites_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       ingredients: {
         Row: {
           category: string | null;
@@ -330,32 +294,563 @@ export type Database = {
           },
         ];
       };
-      products: {
+      mobile_subscriptions: {
         Row: {
-          base_unit: string;
+          created_at: string;
+          current_period_end: string | null;
+          current_period_start: string | null;
+          entitlement_id: string;
+          expires_at: string | null;
+          id: string;
+          is_trial: boolean;
+          last_event_at: string | null;
+          last_event_type: string | null;
+          original_purchase_at: string | null;
+          plan: Database["public"]["Enums"]["PlanTier"];
+          product_id: string | null;
+          revenuecat_app_user_id: string;
+          status: Database["public"]["Enums"]["SubscriptionStatus"];
+          store: Database["public"]["Enums"]["BillingStore"];
+          updated_at: string;
+          user_id: string;
+          will_renew: boolean;
+        };
+        Insert: {
+          created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          entitlement_id?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_trial?: boolean;
+          last_event_at?: string | null;
+          last_event_type?: string | null;
+          original_purchase_at?: string | null;
+          plan?: Database["public"]["Enums"]["PlanTier"];
+          product_id?: string | null;
+          revenuecat_app_user_id: string;
+          status?: Database["public"]["Enums"]["SubscriptionStatus"];
+          store?: Database["public"]["Enums"]["BillingStore"];
+          updated_at?: string;
+          user_id: string;
+          will_renew?: boolean;
+        };
+        Update: {
+          created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          entitlement_id?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_trial?: boolean;
+          last_event_at?: string | null;
+          last_event_type?: string | null;
+          original_purchase_at?: string | null;
+          plan?: Database["public"]["Enums"]["PlanTier"];
+          product_id?: string | null;
+          revenuecat_app_user_id?: string;
+          status?: Database["public"]["Enums"]["SubscriptionStatus"];
+          store?: Database["public"]["Enums"]["BillingStore"];
+          updated_at?: string;
+          user_id?: string;
+          will_renew?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mobile_subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      monthly_purchase_items: {
+        Row: {
           category: string;
           created_at: string;
           id: string;
+          is_purchased: boolean;
+          monthly_purchase_list_id: string;
           name: string;
-          slug: string;
+          notes: string | null;
+          price_paid: number | null;
+          quantity: number | null;
+          unit: string | null;
           updated_at: string;
         };
         Insert: {
-          base_unit?: string;
           category?: string;
           created_at?: string;
           id?: string;
+          is_purchased?: boolean;
+          monthly_purchase_list_id: string;
           name: string;
-          slug: string;
+          notes?: string | null;
+          price_paid?: number | null;
+          quantity?: number | null;
+          unit?: string | null;
           updated_at?: string;
         };
         Update: {
-          base_unit?: string;
           category?: string;
           created_at?: string;
           id?: string;
+          is_purchased?: boolean;
+          monthly_purchase_list_id?: string;
+          name?: string;
+          notes?: string | null;
+          price_paid?: number | null;
+          quantity?: number | null;
+          unit?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "monthly_purchase_items_monthly_purchase_list_id_fkey";
+            columns: ["monthly_purchase_list_id"];
+            isOneToOne: false;
+            referencedRelation: "monthly_purchase_lists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      monthly_purchase_lists: {
+        Row: {
+          created_at: string;
+          id: string;
+          month: number;
+          updated_at: string;
+          user_id: string;
+          year: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          month: number;
+          updated_at?: string;
+          user_id: string;
+          year: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          month?: number;
+          updated_at?: string;
+          user_id?: string;
+          year?: number;
+        };
+        Relationships: [];
+      };
+      offer_cashback_entries: {
+        Row: {
+          amount_cents: number;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          offer_id: string | null;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          amount_cents?: number;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          offer_id?: string | null;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          amount_cents?: number;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          offer_id?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "offer_cashback_entries_offer_id_fkey";
+            columns: ["offer_id"];
+            isOneToOne: false;
+            referencedRelation: "regional_offers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      offer_categories: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          legacy_enum: Database["public"]["Enums"]["OfferCategory"] | null;
+          metadata: Json;
+          name: string;
+          parent_id: string | null;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+          vertical_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          legacy_enum?: Database["public"]["Enums"]["OfferCategory"] | null;
+          metadata?: Json;
+          name: string;
+          parent_id?: string | null;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+          vertical_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          legacy_enum?: Database["public"]["Enums"]["OfferCategory"] | null;
+          metadata?: Json;
+          name?: string;
+          parent_id?: string | null;
+          slug?: string;
+          sort_order?: number;
+          updated_at?: string;
+          vertical_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "offer_categories_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "offer_categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "offer_categories_vertical_id_fkey";
+            columns: ["vertical_id"];
+            isOneToOne: false;
+            referencedRelation: "offer_verticals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      offer_coupons: {
+        Row: {
+          code: string;
+          created_at: string;
+          discount_type: string;
+          discount_value: number;
+          id: string;
+          is_active: boolean;
+          metadata: Json;
+          store_id: string | null;
+          valid_until: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          discount_type?: string;
+          discount_value: number;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          store_id?: string | null;
+          valid_until?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          discount_type?: string;
+          discount_value?: number;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          store_id?: string | null;
+          valid_until?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "offer_coupons_store_id_fkey";
+            columns: ["store_id"];
+            isOneToOne: false;
+            referencedRelation: "regional_stores";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      offer_extension_registry: {
+        Row: {
+          created_at: string;
+          id: string;
+          metadata: Json;
+          name: string;
+          slug: string;
+          status: Database["public"]["Enums"]["offer_extension_status"];
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name: string;
+          slug: string;
+          status?: Database["public"]["Enums"]["offer_extension_status"];
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
           name?: string;
           slug?: string;
+          status?: Database["public"]["Enums"]["offer_extension_status"];
+        };
+        Relationships: [];
+      };
+      offer_favorites: {
+        Row: {
+          created_at: string;
+          id: string;
+          offer_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          offer_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          offer_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "offer_favorites_offer_id_fkey";
+            columns: ["offer_id"];
+            isOneToOne: false;
+            referencedRelation: "regional_offers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "offer_favorites_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      offer_market_catalog: {
+        Row: {
+          chain: string;
+          city: string;
+          created_at: string;
+          external_partner_id: string | null;
+          id: string;
+          is_active: boolean;
+          latitude: number;
+          longitude: number;
+          metadata: Json;
+          name: string;
+          state: string;
+          updated_at: string;
+        };
+        Insert: {
+          chain: string;
+          city: string;
+          created_at?: string;
+          external_partner_id?: string | null;
+          id?: string;
+          is_active?: boolean;
+          latitude: number;
+          longitude: number;
+          metadata?: Json;
+          name: string;
+          state: string;
+          updated_at?: string;
+        };
+        Update: {
+          chain?: string;
+          city?: string;
+          created_at?: string;
+          external_partner_id?: string | null;
+          id?: string;
+          is_active?: boolean;
+          latitude?: number;
+          longitude?: number;
+          metadata?: Json;
+          name?: string;
+          state?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      offer_price_alerts: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          metadata: Json;
+          notify_email: boolean;
+          notify_push: boolean;
+          target_price: number | null;
+          updated_at: string;
+          user_id: string;
+          watchlist_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          notify_email?: boolean;
+          notify_push?: boolean;
+          target_price?: number | null;
+          updated_at?: string;
+          user_id: string;
+          watchlist_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          notify_email?: boolean;
+          notify_push?: boolean;
+          target_price?: number | null;
+          updated_at?: string;
+          user_id?: string;
+          watchlist_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "offer_price_alerts_watchlist_id_fkey";
+            columns: ["watchlist_id"];
+            isOneToOne: false;
+            referencedRelation: "offer_product_watchlist";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      offer_product_watchlist: {
+        Row: {
+          created_at: string;
+          display_name: string;
+          id: string;
+          last_offer_id: string | null;
+          metadata: Json;
+          product_key: string;
+          updated_at: string;
+          user_id: string;
+          vertical_slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          display_name: string;
+          id?: string;
+          last_offer_id?: string | null;
+          metadata?: Json;
+          product_key: string;
+          updated_at?: string;
+          user_id: string;
+          vertical_slug?: string;
+        };
+        Update: {
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          last_offer_id?: string | null;
+          metadata?: Json;
+          product_key?: string;
+          updated_at?: string;
+          user_id?: string;
+          vertical_slug?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "offer_product_watchlist_last_offer_id_fkey";
+            columns: ["last_offer_id"];
+            isOneToOne: false;
+            referencedRelation: "regional_offers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      offer_push_subscriptions: {
+        Row: {
+          created_at: string;
+          device_token: string | null;
+          endpoint: string | null;
+          id: string;
+          is_active: boolean;
+          metadata: Json;
+          platform: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          device_token?: string | null;
+          endpoint?: string | null;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          platform?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          device_token?: string | null;
+          endpoint?: string | null;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          platform?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      offer_verticals: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          icon_key: string | null;
+          id: string;
+          is_active: boolean;
+          metadata: Json;
+          name: string;
+          slug: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          icon_key?: string | null;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          name: string;
+          slug: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          icon_key?: string | null;
+          id?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -420,6 +915,74 @@ export type Database = {
           },
         ];
       };
+      plan_change_logs: {
+        Row: {
+          created_at: string;
+          id: string;
+          metadata: Json | null;
+          new_plan: Database["public"]["Enums"]["PlanTier"];
+          previous_plan: Database["public"]["Enums"]["PlanTier"] | null;
+          source: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          new_plan: Database["public"]["Enums"]["PlanTier"];
+          previous_plan?: Database["public"]["Enums"]["PlanTier"] | null;
+          source: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          metadata?: Json | null;
+          new_plan?: Database["public"]["Enums"]["PlanTier"];
+          previous_plan?: Database["public"]["Enums"]["PlanTier"] | null;
+          source?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_change_logs_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      products: {
+        Row: {
+          base_unit: string;
+          category: string;
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          base_unit?: string;
+          category?: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          base_unit?: string;
+          category?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -431,6 +994,7 @@ export type Database = {
           full_name: string | null;
           id: string;
           offer_city: string | null;
+          offer_preferences: Json;
           offer_search_radius_km: number;
           offer_state: string | null;
           plan: Database["public"]["Enums"]["PlanTier"];
@@ -447,6 +1011,7 @@ export type Database = {
           full_name?: string | null;
           id: string;
           offer_city?: string | null;
+          offer_preferences?: Json;
           offer_search_radius_km?: number;
           offer_state?: string | null;
           plan?: Database["public"]["Enums"]["PlanTier"];
@@ -463,6 +1028,7 @@ export type Database = {
           full_name?: string | null;
           id?: string;
           offer_city?: string | null;
+          offer_preferences?: Json;
           offer_search_radius_km?: number;
           offer_state?: string | null;
           plan?: Database["public"]["Enums"]["PlanTier"];
@@ -519,154 +1085,65 @@ export type Database = {
           },
         ];
       };
-      regional_offers: {
+      recipe_prep_videos: {
         Row: {
-          category: Database["public"]["Enums"]["OfferCategory"];
+          caption: string | null;
           created_at: string;
-          current_price: number;
-          description: string | null;
+          duration_seconds: number;
           id: string;
-          image_url: string | null;
-          ingredient_keywords: string[];
-          is_active: boolean;
-          previous_price: number | null;
-          product_name: string;
-          store_id: string;
+          is_system: boolean;
+          recipe_id: string | null;
+          sort_order: number;
+          step_number: number | null;
+          thumbnail_url: string | null;
           title: string;
-          unit: string | null;
-          updated_at: string;
-          valid_from: string;
-          valid_until: string;
+          user_id: string | null;
+          video_url: string;
         };
         Insert: {
-          category?: Database["public"]["Enums"]["OfferCategory"];
+          caption?: string | null;
           created_at?: string;
-          current_price: number;
-          description?: string | null;
+          duration_seconds?: number;
           id?: string;
-          image_url?: string | null;
-          ingredient_keywords?: string[];
-          is_active?: boolean;
-          previous_price?: number | null;
-          product_name: string;
-          store_id: string;
+          is_system?: boolean;
+          recipe_id?: string | null;
+          sort_order?: number;
+          step_number?: number | null;
+          thumbnail_url?: string | null;
           title: string;
-          unit?: string | null;
-          updated_at?: string;
-          valid_from?: string;
-          valid_until: string;
+          user_id?: string | null;
+          video_url: string;
         };
         Update: {
-          category?: Database["public"]["Enums"]["OfferCategory"];
+          caption?: string | null;
           created_at?: string;
-          current_price?: number;
-          description?: string | null;
+          duration_seconds?: number;
           id?: string;
-          image_url?: string | null;
-          ingredient_keywords?: string[];
-          is_active?: boolean;
-          previous_price?: number | null;
-          product_name?: string;
-          store_id?: string;
+          is_system?: boolean;
+          recipe_id?: string | null;
+          sort_order?: number;
+          step_number?: number | null;
+          thumbnail_url?: string | null;
           title?: string;
-          unit?: string | null;
-          updated_at?: string;
-          valid_from?: string;
-          valid_until?: string;
+          user_id?: string | null;
+          video_url?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "regional_offers_store_id_fkey";
-            columns: ["store_id"];
+            foreignKeyName: "recipe_prep_videos_recipe_id_fkey";
+            columns: ["recipe_id"];
             isOneToOne: false;
-            referencedRelation: "regional_stores";
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_prep_videos_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
-      };
-      offer_market_catalog: {
-        Row: {
-          chain: string;
-          city: string;
-          created_at: string;
-          external_partner_id: string | null;
-          id: string;
-          is_active: boolean;
-          latitude: number;
-          longitude: number;
-          metadata: Json;
-          name: string;
-          state: string;
-          updated_at: string;
-        };
-        Insert: {
-          chain: string;
-          city: string;
-          created_at?: string;
-          external_partner_id?: string | null;
-          id?: string;
-          is_active?: boolean;
-          latitude: number;
-          longitude: number;
-          metadata?: Json;
-          name: string;
-          state: string;
-          updated_at?: string;
-        };
-        Update: {
-          chain?: string;
-          city?: string;
-          created_at?: string;
-          external_partner_id?: string | null;
-          id?: string;
-          is_active?: boolean;
-          latitude?: number;
-          longitude?: number;
-          metadata?: Json;
-          name?: string;
-          state?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      regional_stores: {
-        Row: {
-          chain: string;
-          city: string;
-          created_at: string;
-          id: string;
-          is_active: boolean;
-          latitude: number | null;
-          longitude: number | null;
-          name: string;
-          neighborhood: string | null;
-          state: string;
-        };
-        Insert: {
-          chain: string;
-          city: string;
-          created_at?: string;
-          id?: string;
-          is_active?: boolean;
-          latitude?: number | null;
-          longitude?: number | null;
-          name: string;
-          neighborhood?: string | null;
-          state?: string;
-        };
-        Update: {
-          chain?: string;
-          city?: string;
-          created_at?: string;
-          id?: string;
-          is_active?: boolean;
-          latitude?: number | null;
-          longitude?: number | null;
-          name?: string;
-          neighborhood?: string | null;
-          state?: string;
-        };
-        Relationships: [];
       };
       recipes: {
         Row: {
@@ -736,65 +1213,148 @@ export type Database = {
           },
         ];
       };
-      recipe_prep_videos: {
+      regional_offers: {
         Row: {
-          caption: string | null;
+          category: Database["public"]["Enums"]["OfferCategory"];
+          category_id: string | null;
           created_at: string;
-          duration_seconds: number;
+          current_price: number;
+          description: string | null;
           id: string;
-          is_system: boolean;
-          recipe_id: string | null;
-          sort_order: number;
-          step_number: number | null;
-          thumbnail_url: string | null;
+          image_url: string | null;
+          ingredient_keywords: string[];
+          is_active: boolean;
+          previous_price: number | null;
+          product_name: string;
+          store_id: string;
           title: string;
-          user_id: string | null;
-          video_url: string;
+          unit: string | null;
+          updated_at: string;
+          valid_from: string;
+          valid_until: string;
         };
         Insert: {
-          caption?: string | null;
+          category?: Database["public"]["Enums"]["OfferCategory"];
+          category_id?: string | null;
           created_at?: string;
-          duration_seconds?: number;
+          current_price: number;
+          description?: string | null;
           id?: string;
-          is_system?: boolean;
-          recipe_id?: string | null;
-          sort_order?: number;
-          step_number?: number | null;
-          thumbnail_url?: string | null;
+          image_url?: string | null;
+          ingredient_keywords?: string[];
+          is_active?: boolean;
+          previous_price?: number | null;
+          product_name: string;
+          store_id: string;
           title: string;
-          user_id?: string | null;
-          video_url: string;
+          unit?: string | null;
+          updated_at?: string;
+          valid_from?: string;
+          valid_until: string;
         };
         Update: {
-          caption?: string | null;
+          category?: Database["public"]["Enums"]["OfferCategory"];
+          category_id?: string | null;
           created_at?: string;
-          duration_seconds?: number;
+          current_price?: number;
+          description?: string | null;
           id?: string;
-          is_system?: boolean;
-          recipe_id?: string | null;
-          sort_order?: number;
-          step_number?: number | null;
-          thumbnail_url?: string | null;
+          image_url?: string | null;
+          ingredient_keywords?: string[];
+          is_active?: boolean;
+          previous_price?: number | null;
+          product_name?: string;
+          store_id?: string;
           title?: string;
-          user_id?: string | null;
-          video_url?: string;
+          unit?: string | null;
+          updated_at?: string;
+          valid_from?: string;
+          valid_until?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "recipe_prep_videos_recipe_id_fkey";
-            columns: ["recipe_id"];
+            foreignKeyName: "regional_offers_category_id_fkey";
+            columns: ["category_id"];
             isOneToOne: false;
-            referencedRelation: "recipes";
+            referencedRelation: "offer_categories";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "recipe_prep_videos_user_id_fkey";
-            columns: ["user_id"];
+            foreignKeyName: "regional_offers_store_id_fkey";
+            columns: ["store_id"];
             isOneToOne: false;
-            referencedRelation: "profiles";
+            referencedRelation: "regional_stores";
             referencedColumns: ["id"];
           },
         ];
+      };
+      regional_stores: {
+        Row: {
+          chain: string;
+          city: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          latitude: number | null;
+          longitude: number | null;
+          name: string;
+          neighborhood: string | null;
+          state: string;
+          vertical_id: string | null;
+        };
+        Insert: {
+          chain: string;
+          city: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          latitude?: number | null;
+          longitude?: number | null;
+          name: string;
+          neighborhood?: string | null;
+          state?: string;
+          vertical_id?: string | null;
+        };
+        Update: {
+          chain?: string;
+          city?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          latitude?: number | null;
+          longitude?: number | null;
+          name?: string;
+          neighborhood?: string | null;
+          state?: string;
+          vertical_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "regional_stores_vertical_id_fkey";
+            columns: ["vertical_id"];
+            isOneToOne: false;
+            referencedRelation: "offer_verticals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      revenuecat_webhook_events: {
+        Row: {
+          event_type: string;
+          id: string;
+          processed_at: string;
+        };
+        Insert: {
+          event_type: string;
+          id: string;
+          processed_at?: string;
+        };
+        Update: {
+          event_type?: string;
+          id?: string;
+          processed_at?: string;
+        };
+        Relationships: [];
       };
       shopping_list_items: {
         Row: {
@@ -917,6 +1477,24 @@ export type Database = {
           },
         ];
       };
+      stripe_webhook_events: {
+        Row: {
+          event_type: string;
+          id: string;
+          processed_at: string;
+        };
+        Insert: {
+          event_type: string;
+          id: string;
+          processed_at?: string;
+        };
+        Update: {
+          event_type?: string;
+          id?: string;
+          processed_at?: string;
+        };
+        Relationships: [];
+      };
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean;
@@ -970,235 +1548,37 @@ export type Database = {
           },
         ];
       };
-      plan_change_logs: {
+      usage_logs: {
         Row: {
+          action: string;
           created_at: string;
           id: string;
           metadata: Json | null;
-          new_plan: Database["public"]["Enums"]["PlanTier"];
-          previous_plan: Database["public"]["Enums"]["PlanTier"] | null;
-          source: string;
           user_id: string;
         };
         Insert: {
+          action: string;
           created_at?: string;
           id?: string;
           metadata?: Json | null;
-          new_plan: Database["public"]["Enums"]["PlanTier"];
-          previous_plan?: Database["public"]["Enums"]["PlanTier"] | null;
-          source: string;
           user_id: string;
         };
         Update: {
+          action?: string;
           created_at?: string;
           id?: string;
           metadata?: Json | null;
-          new_plan?: Database["public"]["Enums"]["PlanTier"];
-          previous_plan?: Database["public"]["Enums"]["PlanTier"] | null;
-          source?: string;
           user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "plan_change_logs_user_id_fkey";
+            foreignKeyName: "usage_logs_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
-      };
-      monthly_purchase_items: {
-        Row: {
-          category: string;
-          created_at: string;
-          id: string;
-          is_purchased: boolean;
-          monthly_purchase_list_id: string;
-          name: string;
-          notes: string | null;
-          price_paid: number | null;
-          quantity: number | null;
-          unit: string | null;
-          updated_at: string;
-        };
-        Insert: {
-          category?: string;
-          created_at?: string;
-          id?: string;
-          is_purchased?: boolean;
-          monthly_purchase_list_id: string;
-          name: string;
-          notes?: string | null;
-          price_paid?: number | null;
-          quantity?: number | null;
-          unit?: string | null;
-          updated_at?: string;
-        };
-        Update: {
-          category?: string;
-          created_at?: string;
-          id?: string;
-          is_purchased?: boolean;
-          monthly_purchase_list_id?: string;
-          name?: string;
-          notes?: string | null;
-          price_paid?: number | null;
-          quantity?: number | null;
-          unit?: string | null;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "monthly_purchase_items_monthly_purchase_list_id_fkey";
-            columns: ["monthly_purchase_list_id"];
-            isOneToOne: false;
-            referencedRelation: "monthly_purchase_lists";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      monthly_purchase_lists: {
-        Row: {
-          created_at: string;
-          id: string;
-          month: number;
-          updated_at: string;
-          user_id: string;
-          year: number;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          month: number;
-          updated_at?: string;
-          user_id: string;
-          year: number;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          month?: number;
-          updated_at?: string;
-          user_id?: string;
-          year?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "monthly_purchase_lists_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      mobile_subscriptions: {
-        Row: {
-          created_at: string;
-          current_period_end: string | null;
-          current_period_start: string | null;
-          entitlement_id: string;
-          expires_at: string | null;
-          id: string;
-          is_trial: boolean;
-          last_event_at: string | null;
-          last_event_type: string | null;
-          original_purchase_at: string | null;
-          plan: Database["public"]["Enums"]["PlanTier"];
-          product_id: string | null;
-          revenuecat_app_user_id: string;
-          status: Database["public"]["Enums"]["SubscriptionStatus"];
-          store: Database["public"]["Enums"]["BillingStore"];
-          updated_at: string;
-          user_id: string;
-          will_renew: boolean;
-        };
-        Insert: {
-          created_at?: string;
-          current_period_end?: string | null;
-          current_period_start?: string | null;
-          entitlement_id?: string;
-          expires_at?: string | null;
-          id?: string;
-          is_trial?: boolean;
-          last_event_at?: string | null;
-          last_event_type?: string | null;
-          original_purchase_at?: string | null;
-          plan?: Database["public"]["Enums"]["PlanTier"];
-          product_id?: string | null;
-          revenuecat_app_user_id: string;
-          status?: Database["public"]["Enums"]["SubscriptionStatus"];
-          store?: Database["public"]["Enums"]["BillingStore"];
-          updated_at?: string;
-          user_id: string;
-          will_renew?: boolean;
-        };
-        Update: {
-          created_at?: string;
-          current_period_end?: string | null;
-          current_period_start?: string | null;
-          entitlement_id?: string;
-          expires_at?: string | null;
-          id?: string;
-          is_trial?: boolean;
-          last_event_at?: string | null;
-          last_event_type?: string | null;
-          original_purchase_at?: string | null;
-          plan?: Database["public"]["Enums"]["PlanTier"];
-          product_id?: string | null;
-          revenuecat_app_user_id?: string;
-          status?: Database["public"]["Enums"]["SubscriptionStatus"];
-          store?: Database["public"]["Enums"]["BillingStore"];
-          updated_at?: string;
-          user_id?: string;
-          will_renew?: boolean;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "mobile_subscriptions_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: true;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      revenuecat_webhook_events: {
-        Row: {
-          event_type: string;
-          id: string;
-          processed_at: string;
-        };
-        Insert: {
-          event_type: string;
-          id: string;
-          processed_at?: string;
-        };
-        Update: {
-          event_type?: string;
-          id?: string;
-          processed_at?: string;
-        };
-        Relationships: [];
-      };
-      stripe_webhook_events: {
-        Row: {
-          event_type: string;
-          id: string;
-          processed_at: string;
-        };
-        Insert: {
-          event_type: string;
-          id: string;
-          processed_at?: string;
-        };
-        Update: {
-          event_type?: string;
-          id?: string;
-          processed_at?: string;
-        };
-        Relationships: [];
       };
       weekly_meal_plans: {
         Row: {
@@ -1233,43 +1613,18 @@ export type Database = {
         };
         Relationships: [];
       };
-      usage_logs: {
-        Row: {
-          action: string;
-          created_at: string;
-          id: string;
-          metadata: Json | null;
-          user_id: string;
-        };
-        Insert: {
-          action: string;
-          created_at?: string;
-          id?: string;
-          metadata?: Json | null;
-          user_id: string;
-        };
-        Update: {
-          action?: string;
-          created_at?: string;
-          id?: string;
-          metadata?: Json | null;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "usage_logs_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      count_active_offers_by_vertical: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          vertical_slug: string;
+          offer_count: number;
+        }[];
+      };
       log_plan_change: {
         Args: {
           p_metadata?: Json;
@@ -1283,6 +1638,10 @@ export type Database = {
       mock_upgrade_plan: {
         Args: { p_plan: Database["public"]["Enums"]["PlanTier"] };
         Returns: Database["public"]["Enums"]["PlanTier"];
+      };
+      record_usage_log: {
+        Args: { p_action: string; p_metadata?: Json | null };
+        Returns: undefined;
       };
     };
     Enums: {
@@ -1300,9 +1659,10 @@ export type Database = {
         | "LACTOSE_FREE"
         | "LOW_CARB"
         | "KETO";
+      offer_extension_status: "planned" | "beta" | "active";
       OfferCategory:
-        | "PRODUCE"
         | "MEAT"
+        | "PRODUCE"
         | "DAIRY"
         | "BAKERY"
         | "BEVERAGES"
@@ -1465,6 +1825,7 @@ export const Constants = {
         "LOW_CARB",
         "KETO",
       ],
+      offer_extension_status: ["planned", "beta", "active"],
       OfferCategory: [
         "MEAT",
         "PRODUCE",
@@ -1489,7 +1850,6 @@ export const Constants = {
     },
   },
 } as const;
-
 export type Profile = Tables<"profiles">;
 export type User = Profile;
 export type Recipe = Tables<"recipes">;
@@ -1500,7 +1860,6 @@ export type Favorite = Tables<"favorites">;
 export type ShoppingList = Tables<"shopping_lists">;
 export type ShoppingListItem = Tables<"shopping_list_items">;
 export type Subscription = Tables<"subscriptions">;
-export type MobileSubscription = Tables<"mobile_subscriptions">;
 export type IngredientScan = Tables<"ingredient_scans">;
 export type AiGeneration = Tables<"ai_generations">;
 export type UsageLog = Tables<"usage_logs">;
@@ -1508,9 +1867,7 @@ export type RegionalOfferRow = Tables<"regional_offers">;
 export type RegionalStoreRow = Tables<"regional_stores">;
 export type OfferFavorite = Tables<"offer_favorites">;
 export type OfferCategory = Enums<"OfferCategory">;
-export type Product = Tables<"products">;
-export type MarketPrice = Tables<"market_prices">;
-export type IngredientSubstitutionRule = Tables<"ingredient_substitutions">;
-export type WeeklyMealPlan = Tables<"weekly_meal_plans">;
+export type OfferVerticalRow = Tables<"offer_verticals">;
+export type OfferCategoryRow = Tables<"offer_categories">;
 export type MonthlyPurchaseListRow = Tables<"monthly_purchase_lists">;
 export type MonthlyPurchaseItemRow = Tables<"monthly_purchase_items">;

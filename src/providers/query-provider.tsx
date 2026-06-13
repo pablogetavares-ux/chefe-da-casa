@@ -7,6 +7,8 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
+import { shouldRetryQuery } from "@/lib/api/client-errors";
+
 type QueryProviderProps = {
   children: React.ReactNode;
 };
@@ -17,8 +19,9 @@ function makeQueryClient() {
       queries: {
         staleTime: 2 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
-        retry: 1,
+        retry: (failureCount, error) => shouldRetryQuery(error, failureCount),
         refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
       },
       mutations: {
         retry: 0,

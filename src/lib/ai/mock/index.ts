@@ -17,7 +17,7 @@ import {
   type SweetDessertFormat,
 } from "@/lib/ai/mock/recipe-profiles";
 
-export const AI_MOCK_MODEL = "dev-mock-chef-da-casa";
+export const AI_MOCK_MODEL = "dev-mock-chefe-da-casa";
 
 export function isAiMockEnabled() {
   if (process.env.NODE_ENV === "production") return false;

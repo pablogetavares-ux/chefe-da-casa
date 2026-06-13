@@ -17,6 +17,21 @@ import { isAdminClientConfigured } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
+async function requireStripeSync(
+  subscription: Stripe.Subscription,
+  fallbackUserId?: string | null,
+) {
+  const result = await syncSubscriptionFromStripe(subscription, fallbackUserId);
+  if (!result.ok) {
+    logger.error("stripe.webhook.sync_skipped", {
+      reason: result.reason,
+      subscriptionId: subscription.id,
+    });
+    throw new Error(`STRIPE_SYNC_FAILED:${result.reason}`);
+  }
+  return result;
+}
+
 export async function POST(request: Request) {
   if (!isStripeConfigured() || !isAdminClientConfigured()) {
     return NextResponse.json(
@@ -60,7 +75,7 @@ export async function POST(request: Request) {
           String(session.subscription),
         );
 
-        await syncSubscriptionFromStripe(
+        await requireStripeSync(
           subscription,
           session.client_reference_id ?? session.metadata?.userId,
         );
@@ -70,7 +85,7 @@ export async function POST(request: Request) {
       case "customer.subscription.updated":
       case "customer.subscription.created": {
         const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscriptionFromStripe(subscription);
+        await requireStripeSync(subscription);
         break;
       }
 
@@ -81,13 +96,18 @@ export async function POST(request: Request) {
         if (userId) {
           const { createAdminClient } = await import("@/lib/supabase/admin");
           const admin = createAdminClient();
-          await admin
+          const { error: updateError } = await admin
             .from("subscriptions")
             .update({
               status: "CANCELED",
               canceled_at: new Date().toISOString(),
             })
             .eq("stripe_subscription_id", subscription.id);
+
+          if (updateError) {
+            throw new Error(updateError.message);
+          }
+
           await downgradeUserToFree(userId, "stripe.subscription.deleted");
         }
         break;
@@ -106,7 +126,7 @@ export async function POST(request: Request) {
         if (subscriptionId) {
           const subscription =
             await stripe.subscriptions.retrieve(subscriptionId);
-          await syncSubscriptionFromStripe(subscription);
+          await requireStripeSync(subscription);
           logger.warn("stripe.invoice.payment_failed", {
             subscriptionId,
             customerId: invoice.customer,
@@ -132,7 +152,10 @@ export async function POST(request: Request) {
       type: event.type,
       message,
     });
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro ao processar webhook" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ received: true });

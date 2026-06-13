@@ -10,7 +10,7 @@ describe("getLaunchReadiness", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
-    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Chef da Casa AI");
+    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Chefe da Casa");
     vi.stubEnv("NODE_ENV", "development");
 
     const { getLaunchReadiness } =
@@ -28,7 +28,7 @@ describe("getLaunchReadiness", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://app.example.com");
-    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Chef da Casa AI");
+    vi.stubEnv("NEXT_PUBLIC_APP_NAME", "Chefe da Casa");
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_test123");
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");

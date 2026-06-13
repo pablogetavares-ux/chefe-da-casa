@@ -3,13 +3,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchDashboardStats } from "@/lib/queries/dashboard";
 import { buildUserOfferRegion } from "@/modules/offers/region/user-region";
 import type { UserOfferRegion } from "@/modules/offers/region/types";
+import { prioritizeMatchedOffers } from "@/modules/offers/services/integrations";
 import { queryRegionalOffers } from "@/modules/offers/services/offers";
 import { getUserOfferRegion } from "@/modules/offers/services/region";
+import { fetchUserOfferContext } from "@/modules/offers/services/user-offer-context";
 import { RECIPE_LIST_SELECT } from "@/lib/recipes/list-select";
 import {
   selectEconomicalRecipes,
   selectRecipesOfTheDay,
 } from "@/modules/home/utils/recipe-selection";
+import { getDayPeriodInBrazil } from "@/config/plans";
 import type { HomeFeedResponse } from "@/modules/home/types";
 import {
   fetchShoppingListItems,
@@ -39,6 +42,7 @@ export async function fetchHomeFeed(
     radiusKm: regionOverride?.radiusKm ?? profileRegion.radiusKm,
   });
   const statsPromise = fetchDashboardStats(supabase, userId);
+  const userContextPromise = fetchUserOfferContext(supabase, userId);
 
   const recipesPromise = supabase
     .from("recipes")
@@ -79,9 +83,10 @@ export async function fetchHomeFeed(
     },
   );
 
-  const [stats, recipesResult, favoritesResult, offers, shopping] =
+  const [stats, userContext, recipesResult, favoritesResult, offers, shopping] =
     await Promise.all([
       statsPromise,
+      userContextPromise,
       recipesPromise,
       favoritesPromise,
       offersPromise,
@@ -101,6 +106,7 @@ export async function fetchHomeFeed(
     greeting: {
       firstName: stats.firstName,
       plan: stats.plan,
+      period: getDayPeriodInBrazil(),
     },
     stats: {
       pantryCount: stats.pantryCount,
@@ -114,7 +120,9 @@ export async function fetchHomeFeed(
     favoritesPreview,
     favoriteIds,
     shopping,
-    nearbyOffers: sortOffersByDiscount(offers).slice(0, 4),
+    nearbyOffers: sortOffersByDiscount(
+      prioritizeMatchedOffers(offers, userContext),
+    ).slice(0, 4),
     city: region.city,
     region,
   };

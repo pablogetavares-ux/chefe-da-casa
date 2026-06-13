@@ -4,9 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { api } from "@/lib/api/client";
-import type { OfferCategory } from "@/modules/offers/types";
+import { DEFAULT_OFFER_VERTICAL_SLUG } from "@/modules/offers/services/catalog";
 import type { OfferRegionScope } from "@/modules/offers/region/types";
 import type { OfferSearchRadiusKm } from "@/modules/offers/region/types";
+import type {
+  OfferSearchScope,
+  OfferSortBy,
+} from "@/modules/offers/utils/search";
 import {
   invalidateKeys,
   OFFERS_INVALIDATION,
@@ -16,7 +20,12 @@ import {
   toastMutationSuccess,
 } from "@/shared/hooks/api/mutation-utils";
 import {
+  OFFERS_FOR_ANTI_WASTE_QUERY_KEY,
+  OFFERS_FOR_INGREDIENTS_QUERY_PREFIX,
+  OFFERS_FOR_PANTRY_QUERY_KEY,
   OFFERS_FOR_RECIPE_QUERY_PREFIX,
+  OFFERS_HUB_QUERY_KEY,
+  OFFERS_INTEGRATION_CONTEXT_QUERY_KEY,
   OFFERS_QUERY_PREFIX,
   OFFERS_REGION_QUERY_KEY,
 } from "@/shared/hooks/api/query-keys";
@@ -26,8 +35,11 @@ export type OffersFilters = {
   state?: string;
   radiusKm?: OfferSearchRadiusKm;
   scope?: OfferRegionScope;
-  category?: OfferCategory | null;
+  verticalSlug?: string;
+  categorySlug?: string | null;
   q?: string;
+  searchScope?: OfferSearchScope;
+  sortBy?: OfferSortBy;
   favoritesOnly?: boolean;
 };
 
@@ -38,13 +50,27 @@ function offersQueryKey(filters: OffersFilters) {
     filters.state ?? "all-states",
     filters.radiusKm ?? 300,
     filters.scope ?? "within_radius",
-    filters.category ?? "all-categories",
+    filters.verticalSlug ?? DEFAULT_OFFER_VERTICAL_SLUG,
+    filters.categorySlug ?? "all-categories",
     filters.q ?? "",
+    filters.searchScope ?? "all",
+    filters.sortBy ?? "relevance",
     filters.favoritesOnly ? "favorites" : "all",
   ] as const;
 }
 
-export function useOffers(filters: OffersFilters = {}) {
+export function useOffersHub() {
+  return useQuery({
+    queryKey: OFFERS_HUB_QUERY_KEY,
+    queryFn: () => api.offers.getHub(),
+    staleTime: 300_000,
+  });
+}
+
+export function useOffers(
+  filters: OffersFilters = {},
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: offersQueryKey(filters),
     queryFn: () =>
@@ -53,11 +79,16 @@ export function useOffers(filters: OffersFilters = {}) {
         state: filters.state,
         radiusKm: filters.radiusKm,
         scope: filters.scope,
-        category: filters.category ?? undefined,
+        verticalSlug: filters.verticalSlug,
+        categorySlug: filters.categorySlug ?? undefined,
         q: filters.q,
+        searchScope: filters.searchScope,
+        sortBy: filters.sortBy,
         favoritesOnly: filters.favoritesOnly,
       }),
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -91,6 +122,86 @@ export function useUpdateOfferRegion() {
   });
 }
 
+export function useOffersIntegrationContext() {
+  return useQuery({
+    queryKey: OFFERS_INTEGRATION_CONTEXT_QUERY_KEY,
+    queryFn: () => api.offers.getIntegrationContext(),
+    staleTime: 120_000,
+  });
+}
+
+export function useOffersForAntiWaste(options?: {
+  city?: string;
+  state?: string;
+  radiusKm?: OfferSearchRadiusKm;
+}) {
+  return useQuery({
+    queryKey: [
+      ...OFFERS_FOR_ANTI_WASTE_QUERY_KEY,
+      options?.city ?? "all",
+      options?.state ?? "all-states",
+      options?.radiusKm ?? 300,
+    ] as const,
+    queryFn: () => api.offers.forAntiWaste(options),
+    staleTime: 60_000,
+  });
+}
+
+export function useOffersForIngredients(
+  names: string[],
+  options?: {
+    context?: "weekly_plan" | "ingredients";
+    city?: string;
+    state?: string;
+    radiusKm?: OfferSearchRadiusKm;
+    enabled?: boolean;
+  },
+) {
+  const normalized = names
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .sort()
+    .join("|");
+
+  return useQuery({
+    queryKey: [
+      ...OFFERS_FOR_INGREDIENTS_QUERY_PREFIX,
+      normalized || "empty",
+      options?.context ?? "ingredients",
+      options?.city ?? "all",
+      options?.state ?? "all-states",
+      options?.radiusKm ?? 300,
+    ] as const,
+    queryFn: () =>
+      api.offers.forIngredients({
+        names,
+        context: options?.context,
+        city: options?.city,
+        state: options?.state,
+        radiusKm: options?.radiusKm,
+      }),
+    enabled: (options?.enabled ?? true) && names.length > 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useOffersForPantry(options?: {
+  city?: string;
+  state?: string;
+  radiusKm?: OfferSearchRadiusKm;
+}) {
+  return useQuery({
+    queryKey: [
+      ...OFFERS_FOR_PANTRY_QUERY_KEY,
+      options?.city ?? "all",
+      options?.state ?? "all-states",
+      options?.radiusKm ?? 300,
+    ] as const,
+    queryFn: () => api.offers.forPantry(options),
+    staleTime: 60_000,
+  });
+}
+
 export function useOffersForRecipe(
   recipeId?: string,
   options?: {
@@ -98,6 +209,7 @@ export function useOffersForRecipe(
     state?: string;
     radiusKm?: OfferSearchRadiusKm;
     scope?: OfferRegionScope;
+    enabled?: boolean;
   },
 ) {
   return useQuery({
@@ -110,7 +222,7 @@ export function useOffersForRecipe(
       options?.scope ?? "within_radius",
     ] as const,
     queryFn: () => api.offers.forRecipe(recipeId!, options),
-    enabled: Boolean(recipeId),
+    enabled: (options?.enabled ?? true) && Boolean(recipeId),
     staleTime: 60_000,
   });
 }

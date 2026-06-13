@@ -9,7 +9,7 @@ function emit(level: LogLevel, event: string, payload?: LogPayload) {
     level,
     event,
     ts: new Date().toISOString(),
-    service: "chef-da-casa-ai",
+    service: "chefe-da-casa",
     env: process.env.NODE_ENV,
     ...payload,
   };

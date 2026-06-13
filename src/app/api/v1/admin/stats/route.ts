@@ -1,4 +1,5 @@
-import { apiError, apiSuccess } from "@/lib/api/response";
+import { apiSuccess } from "@/lib/api/response";
+import { handleApiRouteError } from "@/lib/api/route-error";
 import {
   adminUnauthorizedResponse,
   assertAdminApiAccess,
@@ -16,6 +17,10 @@ export async function GET() {
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return adminUnauthorizedResponse();
     }
-    return apiError("Falha ao carregar estatísticas", 500);
+    return handleApiRouteError(
+      error,
+      "GET /api/v1/admin/stats",
+      "Falha ao carregar estatísticas",
+    );
   }
 }

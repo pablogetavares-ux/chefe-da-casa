@@ -35,8 +35,14 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
+  transpilePackages: ["recharts", "es-toolkit"],
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion"],
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "recharts",
+      "es-toolkit",
+    ],
   },
   images: {
     formats: ["image/avif", "image/webp"],

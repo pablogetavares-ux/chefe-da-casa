@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import type {
   OfferRegionScope,
@@ -12,6 +12,7 @@ import {
   OFFER_REGION_STORAGE_KEY,
   setStoredOfferRegion,
   storedToUserRegion,
+  subscribeOfferRegion,
   type StoredOfferRegion,
 } from "@/modules/offers/utils/region-preference";
 import { useOfferRegionConfig } from "@/shared/hooks/api/offers";
@@ -21,74 +22,63 @@ type UseOfferRegionPreferenceOptions = {
   syncServerConfig?: boolean;
 };
 
-function readInitialRegion(): StoredOfferRegion {
-  if (typeof window === "undefined") return getDefaultStoredRegion();
-  return getStoredOfferRegion();
-}
-
 /**
  * Preferência regional do usuário (localStorage + sync opcional com API).
+ * SSR-safe via useSyncExternalStore.
  */
 export function useOfferRegionPreference(
   options: UseOfferRegionPreferenceOptions = {},
 ) {
   const syncServerConfig = options.syncServerConfig !== false;
-  const [region, setRegionState] =
-    useState<StoredOfferRegion>(readInitialRegion);
+  const region = useSyncExternalStore(
+    subscribeOfferRegion,
+    getStoredOfferRegion,
+    getDefaultStoredRegion,
+  );
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
-  const { data: serverConfig } = useOfferRegionConfig(syncServerConfig);
+  const { data: serverConfig } = useOfferRegionConfig(
+    syncServerConfig && hydrated,
+  );
 
   const serverCity = serverConfig?.region?.city;
   const serverState = serverConfig?.region?.state;
   const serverRadiusKm = serverConfig?.region?.radiusKm;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!hydrated) return;
     if (localStorage.getItem(OFFER_REGION_STORAGE_KEY)) return;
     if (!serverCity || !serverState || !serverRadiusKm) return;
 
-    const next: StoredOfferRegion = {
+    setStoredOfferRegion({
       city: serverCity,
       state: serverState,
       radiusKm: serverRadiusKm,
       scope: "within_radius",
-    };
-    setStoredOfferRegion(next);
-    // Sync preferência do servidor quando ainda não há escolha local salva.
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration pós-fetch
-    setRegionState((prev) =>
-      prev.city === next.city &&
-      prev.state === next.state &&
-      prev.radiusKm === next.radiusKm
-        ? prev
-        : next,
-    );
-  }, [serverCity, serverState, serverRadiusKm]);
+    });
+  }, [hydrated, serverCity, serverState, serverRadiusKm]);
 
   const applyApiRegion = useCallback((apiRegion: UserOfferRegion) => {
-    setRegionState((prev) => {
-      const next: StoredOfferRegion = {
-        city: apiRegion.city,
-        state: apiRegion.state,
-        radiusKm: apiRegion.radiusKm,
-        scope: prev.scope,
-      };
-      setStoredOfferRegion(next);
-      return next;
+    const current = getStoredOfferRegion();
+    setStoredOfferRegion({
+      city: apiRegion.city,
+      state: apiRegion.state,
+      radiusKm: apiRegion.radiusKm,
+      scope: current.scope,
     });
   }, []);
 
   const setRegion = useCallback((next: StoredOfferRegion) => {
-    setRegionState(next);
     setStoredOfferRegion(next);
   }, []);
 
   const patchRegion = useCallback((patch: Partial<StoredOfferRegion>) => {
-    setRegionState((prev) => {
-      const next = { ...prev, ...patch };
-      setStoredOfferRegion(next);
-      return next;
-    });
+    const current = getStoredOfferRegion();
+    setStoredOfferRegion({ ...current, ...patch });
   }, []);
 
   const setCity = useCallback(
@@ -102,6 +92,7 @@ export function useOfferRegionPreference(
     region,
     userRegion: storedToUserRegion(region),
     scope: region.scope,
+    hydrated,
     setRegion,
     setCity,
     patchRegion,

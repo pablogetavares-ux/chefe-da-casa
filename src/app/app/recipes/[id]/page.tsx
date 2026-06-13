@@ -6,7 +6,7 @@ import { ArrowLeft, Clock, Sparkles, Users } from "lucide-react";
 import { AddRecipeToShoppingListButton } from "@/components/features/shopping/add-recipe-to-list-button";
 import { RecipeActions } from "@/components/features/recipes/recipe-actions";
 import { RecipeAiTools } from "@/components/features/recipes/recipe-ai-tools";
-import { RecipeCover } from "@/components/features/recipes/recipe-cover";
+import { RecipeCoverHero } from "@/components/features/recipes/recipe-cover-hero";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +55,7 @@ export async function generateMetadata({
   return {
     title: recipe.title,
     description:
-      recipe.description ?? `Receita ${recipe.title} — Chef da Casa AI`,
+      recipe.description ?? `Receita ${recipe.title} — Chefe da Casa`,
   };
 }
 
@@ -123,7 +123,8 @@ export default async function RecipeDetailPage({
         <RecipeActions recipeId={recipe.id} recipeTitle={recipe.title} />
       </div>
 
-      <RecipeCover
+      <RecipeCoverHero
+        recipeId={recipe.id}
         title={recipe.title}
         coverImageUrl={recipe.cover_image_url}
         className="shadow-md"

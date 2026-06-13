@@ -1,8 +1,29 @@
+import { headers } from "next/headers";
+
 import { createBearerClient, getBearerToken } from "@/lib/supabase/bearer";
 import { createClient } from "@/lib/supabase/server";
 
+async function resolveBearerToken(request?: Request) {
+  if (request) {
+    const fromRequest = getBearerToken(request);
+    if (fromRequest) return fromRequest;
+  }
+
+  try {
+    const headerStore = await headers();
+    const authHeader = headerStore.get("authorization");
+    if (authHeader?.toLowerCase().startsWith("bearer ")) {
+      return authHeader.slice(7).trim() || null;
+    }
+  } catch {
+    /* fora de request context */
+  }
+
+  return null;
+}
+
 export async function getAuthUser(request?: Request) {
-  const bearer = request ? getBearerToken(request) : null;
+  const bearer = await resolveBearerToken(request);
 
   if (bearer) {
     const supabase = createBearerClient(bearer);
@@ -14,7 +35,7 @@ export async function getAuthUser(request?: Request) {
     return user;
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient(request);
   const {
     data: { user },
     error,
@@ -36,9 +57,14 @@ export async function requireAuthUser(request?: Request) {
 }
 
 export async function createAuthClient(request?: Request) {
-  const bearer = request ? getBearerToken(request) : null;
-  if (bearer) return createBearerClient(bearer);
-  return createClient();
+  return createClient(request);
+}
+
+/** Usuário autenticado + client Supabase (cookie ou Bearer). */
+export async function requireAuthenticatedClient(request?: Request) {
+  const user = await requireAuthUser(request);
+  const supabase = await createClient(request);
+  return { user, supabase };
 }
 
 export function isUnauthorizedError(error: unknown): boolean {

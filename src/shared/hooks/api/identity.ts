@@ -9,6 +9,7 @@ import {
   toastMutationError,
   toastMutationSuccess,
 } from "@/shared/hooks/api/mutation-utils";
+import { OFFERS_FULL_INVALIDATION } from "@/shared/hooks/api/query-keys";
 
 export function useProfile() {
   return useQuery({
@@ -24,7 +25,12 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: api.profile.update,
     onSuccess: () => {
-      invalidateKeys(queryClient, [["profile"], ["billing"]]);
+      invalidateKeys(queryClient, [
+        ["profile"],
+        ["billing"],
+        ["plan-usage"],
+        ...OFFERS_FULL_INVALIDATION,
+      ]);
       toastMutationSuccess("Perfil atualizado");
     },
     onError: toastMutationError,

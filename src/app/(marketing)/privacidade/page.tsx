@@ -6,7 +6,7 @@ import { privacySections } from "@/config/legal-content";
 export const metadata: Metadata = {
   title: "Política de Privacidade",
   description:
-    "Como o Chef da Casa AI coleta, usa e protege seus dados pessoais (LGPD).",
+    "Como o Chefe da Casa coleta, usa e protege seus dados pessoais (LGPD).",
 };
 
 export default function PrivacyPage() {

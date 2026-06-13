@@ -7,7 +7,15 @@ type AdminTableProps = {
 
 export function AdminTable({ children, className }: AdminTableProps) {
   return (
-    <div className={cn("surface-card overflow-x-auto", className)}>
+    <div
+      className={cn(
+        "surface-card overflow-x-auto overscroll-x-contain",
+        className,
+      )}
+      role="region"
+      aria-label="Tabela — deslize horizontalmente no celular"
+      tabIndex={0}
+    >
       <table className="w-full min-w-[640px] text-left text-sm">
         {children}
       </table>

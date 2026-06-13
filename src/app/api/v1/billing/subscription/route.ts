@@ -1,6 +1,7 @@
 import { apiSuccess } from "@/lib/api/response";
 import { handleApiRouteError } from "@/lib/api/route-error";
 import { requireAuthUser } from "@/lib/api/auth";
+import { deriveBillingHealth } from "@/lib/billing/subscription-state";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -14,6 +15,8 @@ export async function GET() {
       .eq("id", user.id)
       .single();
 
+    const plan = profile?.plan ?? "FREE";
+
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("*")
@@ -22,9 +25,12 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
+    const billingHealth = deriveBillingHealth(plan, subscription);
+
     return apiSuccess({
-      plan: profile?.plan ?? "FREE",
+      plan,
       subscription,
+      billingHealth,
     });
   } catch (error) {
     return handleApiRouteError(error, "GET /api/v1/billing/subscription");

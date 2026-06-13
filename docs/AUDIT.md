@@ -1,6 +1,6 @@
-# Auditoria — Chef da Casa AI
+# Auditoria — Chefe da Casa
 
-Última revisão: **30 maio/2026** · Supabase `mnevlegpkrncxlqkqdnl` · Projeto em `C:\dev\chef-da-casa`
+Última revisão: **30 maio/2026** · Supabase `mnevlegpkrncxlqkqdnl` · Projeto em `C:\dev\chefe-da-casa`
 
 ## Resumo executivo
 
@@ -42,7 +42,7 @@
 
 | Risco                                | Status | Mitigação                                               |
 | ------------------------------------ | ------ | ------------------------------------------------------- |
-| OneDrive + `.next`                   | ⚠️     | Desenvolver em `C:\dev\chef-da-casa`                    |
+| OneDrive + `.next`                   | ⚠️     | Desenvolver em `C:\dev\chefe-da-casa`                   |
 | Webhook Stripe/RevenueCat sem secret | ✅     | Retorna 503 se não configurado                          |
 | AI sem OpenAI em prod                | ✅     | `ensureOpenAiConfigured` + blockers no production-check |
 | Erros não tratados em API            | ✅     | Padrão `apiError` / `mapAiRouteError`                   |
@@ -73,7 +73,49 @@ Bloqueadores em produção (`npm run production:check`):
 - `NEXT_PUBLIC_APP_URL` ≠ localhost
 - Avisos: Stripe, Upstash, Sentry
 
-### 7. Arquitetura (saudável)
+### 8. Risco de exposição de dados multi-tenant (jun/2026)
+
+Auditoria MCP (`execute_sql` + `get_advisors`) em **36 tabelas public** — todas com RLS habilitado.
+
+| Área                       | Achado                                                                                                                 | Mitigação                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **RLS ausente**            | Nenhuma tabela nova sem RLS                                                                                            | —                                          |
+| **Owner (`user_id`)**      | Catálogos compartilhados (`regional_offers`, `products`, `offer_verticals`) sem `user_id` — leitura global intencional | Dados sensíveis isolados por `auth.uid()`  |
+| **Pagamentos**             | `subscriptions`, `mobile_subscriptions`: SELECT own; writes só service role                                            | Trigger `prevent_profile_plan_self_update` |
+| **IA / prompts**           | `ai_generations`: SELECT own; INSERT/UPDATE client **revogados** (migration `20260611180000`)                          | API + service role                         |
+| **Usage logs**             | INSERT direto client **revogado**; RPC `record_usage_log`                                                              | Evita inflar limites FREE                  |
+| **Ofertas**                | `offer_favorites`, watchlist, alerts: RLS own; cashback sem INSERT client                                              | —                                          |
+| **Vazamento entre planos** | `profiles.plan` protegido por trigger; features premium gated na API                                                   | Revisar novas rotas premium                |
+| **Performance hub**        | RPC `count_active_offers_by_vertical` + índice parcial                                                                 | Substitui scan completo                    |
+
+**Residual:** Auth leaked-password (Supabase Pro); rate limit CRUD sem Upstash; premium gates dependem de checagem na API (não RLS por plano).
+
+### 9. Falhas em fluxo crítico de usuário (jun/2026)
+
+Matriz de cenários de erro real, comportamento esperado e status de implementação.
+
+| Cenário                                        | Comportamento esperado                                                                                                         | Status |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| **Sem internet / fetch falha**                 | Mensagem amigável; banner offline no app; retry automático ao reconectar (`refetchOnReconnect` + `NetworkRecoveryListener`)    | ✅     |
+| **Timeout de API (30s)**                       | `ApiClientError` `TIMEOUT`; toast e painel com botão "Tentar novamente"                                                        | ✅     |
+| **IA erro / timeout (stream 120s)**            | SSE com `AbortSignal.timeout`; código `AI_TIMEOUT`; toast orientando nova tentativa                                            | ✅     |
+| **Pagamento pendente (`INCOMPLETE`)**          | Banner app-wide + card em Meu plano; CTA portal/checkout                                                                       | ✅     |
+| **Pagamento atrasado (`PAST_DUE` / `UNPAID`)** | Banner de regularização; portal Stripe; gate premium bloqueia se `UNPAID`                                                      | ✅     |
+| **Premium inválido / plano dessincronizado**   | `PremiumFeatureGate` mostra "Sincronizando" + invalidar billing/plan-usage; API continua fonte de verdade (`PREMIUM_REQUIRED`) | ✅     |
+| **Estado corrompido (JSON inválido)**          | `ApiClientError` `INVALID_RESPONSE`; sem crash silencioso                                                                      | ✅     |
+| **Recovery automático**                        | React Query retry só para rede/timeout/5xx; refetch ao voltar online; botão retry em `AsyncPanel`                              | ✅     |
+
+**Arquivos principais:** `src/lib/api/client-errors.ts`, `src/lib/billing/subscription-state.ts`, `src/components/shared/offline-banner.tsx`, `src/components/shared/billing-status-banner.tsx`, `src/shared/components/async-panel.tsx`.
+
+```
+Usuário offline → OfflineBanner
+       ↓ volta online
+NetworkRecoveryListener → refetch queries stale
+API erro → classifyClientError → AsyncPanel / toast contextual
+Billing INCOMPLETE/PAST_DUE → BillingStatusBanner → portal ou refetch
+```
+
+**Residual:** simular offline/timeout em E2E autenticado; reconciliar `profiles.plan` vs Stripe em job assíncrono dedicado (hoje depende de webhook + refetch manual).
 
 ```
 Browser / Mobile
@@ -85,7 +127,7 @@ Webhooks (Stripe, RevenueCat) → service role → profiles.plan
 ## Comandos de verificação
 
 ```bash
-cd C:\dev\chef-da-casa
+cd C:\dev\chefe-da-casa
 npm run typecheck
 npm run lint
 npm test
@@ -103,6 +145,6 @@ Arquivos locais espelhados em `supabase/migrations/` e `prisma/migrations/`.
 
 1. Ativar **leaked password protection** no Supabase Auth
 2. Configurar **Stripe** ou manter só mobile billing em beta
-3. Abrir workspace **`C:\dev\chef-da-casa`** no Cursor
+3. Abrir workspace **`C:\dev\chefe-da-casa`** no Cursor
 4. `git remote add` + push antes do deploy Vercel
 5. E2E com credenciais: `npm run test:e2e` (requer env de teste)

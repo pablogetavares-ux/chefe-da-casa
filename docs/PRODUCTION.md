@@ -1,4 +1,4 @@
-# Produção — Chef da Casa AI
+# Produção — Chefe da Casa
 
 Guia completo para deploy profissional na Vercel.
 

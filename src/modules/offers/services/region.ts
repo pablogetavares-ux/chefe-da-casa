@@ -76,6 +76,7 @@ export async function getOfferRegionConfig(
 
 export async function fetchActiveRegionalStores(
   supabase: Client,
+  options?: { verticalId?: string | null },
 ): Promise<RegionalStoreGeo[]> {
   const cap = await getOffersSchemaCapability(supabase);
 
@@ -86,6 +87,10 @@ export async function fetchActiveRegionalStores(
         "id, name, chain, city, state, neighborhood, latitude, longitude, is_active",
       )
       .order("city");
+
+    if (options?.verticalId) {
+      query = query.eq("vertical_id", options.verticalId);
+    }
 
     if (cap.storeActiveFlag) {
       query = query.eq("is_active", true);
@@ -111,6 +116,10 @@ export async function fetchActiveRegionalStores(
     .from("regional_stores")
     .select("id, name, chain, city, state, neighborhood")
     .order("city");
+
+  if (options?.verticalId) {
+    legacyQuery = legacyQuery.eq("vertical_id", options.verticalId);
+  }
 
   if (cap.storeActiveFlag) {
     legacyQuery = legacyQuery.eq("is_active", true);
@@ -161,8 +170,9 @@ function buildRegionCitiesFromStores(
 /** Uma query em `regional_stores` — reutilize em rotas que precisam de cidades + lojas. */
 export async function fetchOfferStoreCatalog(
   supabase: Client,
+  options?: { verticalId?: string | null },
 ): Promise<OfferStoreCatalog> {
-  const stores = await fetchActiveRegionalStores(supabase);
+  const stores = await fetchActiveRegionalStores(supabase, options);
 
   return {
     stores,

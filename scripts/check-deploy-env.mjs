@@ -148,7 +148,7 @@ if (mode === "ci") {
   }
 }
 
-console.log(`Chef da Casa AI — verificação de deploy (${mode})\n`);
+console.log(`Chefe da Casa — verificação de deploy (${mode})\n`);
 
 if (ok.length) {
   console.log("✅ Configurado:");

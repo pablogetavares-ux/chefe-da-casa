@@ -121,7 +121,7 @@ async function ensureTestUser(email, password, supabase) {
 }
 
 async function run() {
-  console.log("\n=== Chef da Casa AI — Smoke Test ===\n");
+  console.log("\n=== Chefe da Casa — Smoke Test ===\n");
   console.log(`Base: ${BASE}\n`);
 
   if (!SUPABASE_URL || !ANON_KEY) {
@@ -427,19 +427,23 @@ async function run() {
     }
   }
 
-  // --- Pricing compare ---
+  // --- Pricing compare (premium gate) ---
   {
     const { res, body } = await fetchJson(
       "/api/v1/pricing/compare?city=S%C3%A3o%20Paulo&mode=basket",
       {},
       cookieHeader,
     );
-    await assertOk(res.ok, "pricing: compare basket");
-    await assertOk(
-      Array.isArray(body?.data?.storeRankings),
-      "pricing: rankings retornados",
-      String(body?.data?.storeRankings?.length ?? 0),
-    );
+    if (res.status === 403) {
+      log(true, "pricing: compare basket gated (FREE)", body?.error ?? "403");
+    } else {
+      await assertOk(res.ok, "pricing: compare basket");
+      await assertOk(
+        Array.isArray(body?.data?.storeRankings),
+        "pricing: rankings retornados",
+        String(body?.data?.storeRankings?.length ?? 0),
+      );
+    }
   }
 
   // --- App pages (SSR) ---

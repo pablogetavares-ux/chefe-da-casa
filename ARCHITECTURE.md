@@ -1,10 +1,10 @@
-# Chef da Casa AI — Arquitetura
+# Chefe da Casa — Arquitetura
 
 > Documento de referência arquitetural. Versão base — Maio/2026.
 
 ## 1. Visão Geral
 
-**Chef da Casa AI** é um SaaS culinário que usa IA para gerar receitas saudáveis a partir dos ingredientes disponíveis na despensa do usuário.
+**Chefe da Casa** é um SaaS culinário que usa IA para gerar receitas saudáveis a partir dos ingredientes disponíveis na despensa do usuário.
 
 ### Princípios arquiteturais
 
@@ -57,7 +57,7 @@
 ## 3. Estrutura de Pastas
 
 ```
-chef-da-casa-ai/
+chefe-da-casa/
 ├── docs/
 │   ├── ROADMAP.md
 │   └── CONVENTIONS.md

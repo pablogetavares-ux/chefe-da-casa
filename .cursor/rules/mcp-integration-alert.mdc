@@ -1,0 +1,16 @@
+---
+description: MCP e integração — complemento do pré-voo técnico
+alwaysApply: true
+---
+
+# Integração MCP (complemento)
+
+Regra principal: **`critical-technical-pre-flight.mdc`**.
+
+Quando eixos 1–2 (front↔back, MCP) aplicarem:
+
+- Usar MCP Supabase: `list_tables`, `apply_migration`, `generate_typescript_types`, `get_advisors`
+- Rodar `npm run integration:mcp` + `test:smoke` após mudanças
+- Usuário confirma: `.env ok · dev :3000 · MCP conectado` — sem colar secrets
+
+Detalhes: `docs/INTEGRATION.md`

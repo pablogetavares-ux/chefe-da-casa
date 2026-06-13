@@ -1,0 +1,40 @@
+---
+description: Lembrete pós-prompts de auditoria — itens ainda não fechados
+alwaysApply: true
+---
+
+# Pós-auditoria — pendências para fechar
+
+**Quando o usuário indicar que terminou os prompts de análise/auditoria** (ou pedir "fechar auditoria", "terminar tudo", "o que falta"), **antes de dar por concluído**, verificar se estes itens foram feitos. Se **não** foram, listar o que falta e perguntar se deve implementar.
+
+## Já corrigido (não repetir como pendência)
+
+- Frontend: críticos/altos da auditoria (hydration, fetchApi, error boundaries, a11y, etc.)
+- Backend: Bearer via `createClient(request)` + headers; LGPD export/delete; webhooks Stripe/RevenueCat; route-error; timeouts fetchApi; invalidação cache ofertas no profile
+
+## Ainda pode estar pendente — checar e lembrar
+
+### Verificação pós-fix
+- [ ] Re-auditoria ou smoke manual dos fixes (export, delete account, webhook sync, Bearer mobile)
+- [ ] `npm run validate` + `npm test` + `npm run integration:mcp` (com dev server)
+
+### E2E / QA
+- [ ] Playwright mobile autenticado (offers, receita hero, hub vertical)
+- [ ] Fluxo Stripe test mode (checkout + webhook + portal)
+
+### Segurança Supabase
+- [ ] MCP `get_advisors` (security + performance) — não automatizado no script
+- [ ] Rate limit CRUD geral (só AI + export/delete hoje); Upstash em produção
+
+### Performance / código
+- [x] Otimizar hub count (`count_active_offers_by_vertical` RPC)
+- [x] Wire `profiles.offer_preferences` (PATCH profile + UI verticais favoritas)
+
+### Go-live operacional
+- Ver `session-checkpoint.mdc` / `docs/LAUNCH.md` (Vercel, domínio, Stripe live, Auth URLs, Turnstile)
+
+## Comportamento do agente
+
+1. Ao fechar ciclo de auditoria: percorrer checklist acima; marcar feito vs pendente com base no repo/conversa.
+2. Se houver pendências: resumo curto (máx. 8 linhas) + "Quer que eu faça X agora?"
+3. Não implementar nada desta lista sem pedido explícito do usuário.

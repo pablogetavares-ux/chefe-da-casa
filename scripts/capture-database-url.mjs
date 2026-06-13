@@ -42,7 +42,7 @@ function openBrowser(url) {
   }).unref();
 }
 
-console.log("\n🗄️  Chef da Casa AI — connection string (Direct)\n");
+console.log("\n🗄️  Chefe da Casa — connection string (Direct)\n");
 console.log("1. O navegador abre em Settings → Database");
 console.log("2. Connection string → URI → modo **Direct** (porta 5432)");
 console.log("3. Copie a URI completa (postgresql://...)");

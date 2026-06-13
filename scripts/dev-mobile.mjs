@@ -22,7 +22,7 @@ function getLanIp() {
 const ip = getLanIp();
 const appUrl = `http://${ip}:${port}`;
 
-console.log("\n📱 Chef da Casa — dev mobile\n");
+console.log("\n📱 Chefe da Casa — dev mobile\n");
 console.log(`   No Chrome do Android, abra:\n`);
 console.log(`   → ${appUrl}/login`);
 console.log(`   → ${appUrl}/app\n`);
@@ -32,7 +32,7 @@ console.log(`   NEXT_PUBLIC_APP_URL=${appUrl}\n`);
 if (process.platform === "win32") {
   try {
     execSync(
-      `netsh advfirewall firewall add rule name="Chef da Casa Dev ${port}" dir=in action=allow protocol=TCP localport=${port}`,
+      `netsh advfirewall firewall add rule name="Chefe da Casa Dev ${port}" dir=in action=allow protocol=TCP localport=${port}`,
       { stdio: "ignore" },
     );
     console.log("   ✓ Regra de firewall adicionada (porta liberada).\n");

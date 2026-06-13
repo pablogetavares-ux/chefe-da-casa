@@ -1,28 +1,45 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Percent } from "lucide-react";
+import { Clock, Percent } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OfferCard } from "@/modules/offers/components/offer-card";
 import { OffersFiltersBar } from "@/modules/offers/components/offers-filters-bar";
 import { OffersRegionBar } from "@/modules/offers/components/offers-region-bar";
-import {
-  OFFER_CATEGORY_LABELS,
-  type OfferCategory,
-} from "@/modules/offers/types";
+import { OfferVerticalIcon } from "@/modules/offers/constants/vertical-icons";
+import { DEFAULT_OFFER_VERTICAL_SLUG } from "@/modules/offers/services/catalog";
 import { AsyncPanel } from "@/shared/components/async-panel";
 import {
   useAddOfferToShoppingList,
   useOffers,
+  useOffersHub,
   useToggleOfferFavorite,
   useUpdateOfferRegion,
 } from "@/shared/hooks/api/offers";
 import type { StoredOfferRegion } from "@/modules/offers/utils/region-preference";
 import { useOfferRegionPreference } from "@/shared/hooks/use-offer-region";
 
-export function OffersPanel() {
+type OffersPanelProps = {
+  verticalSlug?: string;
+  verticalName?: string;
+};
+
+export function OffersPanel({
+  verticalSlug = DEFAULT_OFFER_VERTICAL_SLUG,
+  verticalName,
+}: OffersPanelProps) {
+  const { data: hubData } = useOffersHub();
+  const hubVertical = hubData?.verticals.find(
+    (item) => item.slug === verticalSlug,
+  );
+  const isVerticalActive =
+    hubVertical?.isActive ?? verticalSlug === "supermarket";
+
   const {
     region,
     patchRegion: patchRegionBase,
@@ -38,9 +55,33 @@ export function OffersPanel() {
   }, [region]);
 
   const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [category, setCategory] = useState<OfferCategory | null>(null);
-  const [q, setQ] = useState("");
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [categorySlug, setCategorySlug] = useState<string | null>(null);
+  const [qInput, setQInput] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [searchScope, setSearchScope] =
+    useState<import("@/modules/offers/utils/search").OfferSearchScope>("all");
+  const [sortBy, setSortBy] =
+    useState<import("@/modules/offers/utils/search").OfferSortBy>("relevance");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+
+  const handleQueryChange = useCallback((value: string) => {
+    setQInput(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = value.trim();
+      if (trimmed.length === 0 || trimmed.length >= 2) {
+        setDebouncedQ(value);
+      }
+    }, 350);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    },
+    [],
+  );
 
   const filters = useMemo(
     () => ({
@@ -48,14 +89,29 @@ export function OffersPanel() {
       state: region.state,
       radiusKm: region.radiusKm,
       scope: region.scope,
-      category,
-      q,
+      verticalSlug,
+      categorySlug,
+      q: debouncedQ,
+      searchScope,
+      sortBy,
       favoritesOnly,
     }),
-    [region, category, q, favoritesOnly],
+    [
+      region,
+      verticalSlug,
+      categorySlug,
+      debouncedQ,
+      searchScope,
+      sortBy,
+      favoritesOnly,
+    ],
   );
 
-  const { data, isLoading, error } = useOffers(filters);
+  const isSearchPending = qInput.trim() !== debouncedQ.trim();
+
+  const { data, isLoading, error, isFetching, refetch } = useOffers(filters, {
+    enabled: isVerticalActive,
+  });
 
   useEffect(() => {
     if (!data?.region || syncedApiRegionRef.current) return;
@@ -99,14 +155,20 @@ export function OffersPanel() {
     [],
   );
 
-  const categories = data?.categories ?? [];
+  const categoryCatalog = useMemo(
+    () => data?.categoryCatalog ?? [],
+    [data?.categoryCatalog],
+  );
 
   const emptyOffersCopy = useMemo(() => {
-    if (category) {
+    if (categorySlug) {
+      const label =
+        categoryCatalog.find((item) => item.slug === categorySlug)?.name ??
+        "esta categoria";
       return {
-        title: `Nenhuma oferta em ${OFFER_CATEGORY_LABELS[category]}`,
+        title: `Nenhuma oferta em ${label}`,
         description:
-          "Não há promoções ativas nessa categoria na sua região. Toque em Todas ou escolha Laticínios, Mercearia, Frutas e verduras ou Carnes.",
+          "Não há promoções ativas nessa categoria na sua região. Toque em Todas ou escolha outra categoria.",
       };
     }
     if (favoritesOnly) {
@@ -116,10 +178,12 @@ export function OffersPanel() {
           "Favorite ofertas nos cards (ícone de coração) para vê-las aqui.",
       };
     }
-    if (q.trim()) {
+    if (debouncedQ.trim()) {
       return {
         title: "Nenhum resultado na busca",
-        description: `Não encontramos “${q.trim()}” na região atual. Tente outro termo ou limpe a busca.`,
+        description: data?.meta?.searchExpanded
+          ? `Não há “${debouncedQ.trim()}” na região atual nem em outras cidades com ofertas ativas.`
+          : `Não encontramos “${debouncedQ.trim()}” perto de ${region.city}. Tente Produto/Loja, aumente o raio ou escolha “Todo o Brasil”.`,
       };
     }
     return {
@@ -127,10 +191,55 @@ export function OffersPanel() {
       description:
         "Ajuste o raio, troque o escopo (Dentro do raio / Todo o Brasil) ou escolha outra cidade.",
     };
-  }, [category, favoritesOnly, q]);
+  }, [
+    categorySlug,
+    categoryCatalog,
+    favoritesOnly,
+    debouncedQ,
+    data?.meta?.searchExpanded,
+    region.city,
+  ]);
+
+  if (!isVerticalActive) {
+    const label = verticalName ?? hubVertical?.name ?? "Esta categoria";
+    return (
+      <EmptyState
+        icon={Clock}
+        title={`${label} — em breve`}
+        description={
+          hubVertical?.description ??
+          "Estamos preparando parceiros e ofertas para esta categoria. Enquanto isso, explore os supermercados."
+        }
+        action={
+          <Link
+            href="/app/offers/supermarket"
+            className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+          >
+            Ver supermercados
+          </Link>
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {hubVertical && (
+        <div className="flex items-center gap-3 rounded-2xl border bg-card/60 px-4 py-3">
+          <OfferVerticalIcon
+            slug={hubVertical.slug}
+            iconKey={hubVertical.iconKey}
+            size="sm"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{hubVertical.name}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {hubVertical.description}
+            </p>
+          </div>
+        </div>
+      )}
+
       <OffersRegionBar
         region={region}
         regionCities={data?.regionCities}
@@ -145,19 +254,35 @@ export function OffersPanel() {
         persistPending={updateRegion.isPending}
       />
 
+      {data?.meta?.searchExpanded &&
+        debouncedQ.trim() &&
+        (data?.offers.length ?? 0) > 0 && (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-4 py-2.5 text-sm text-amber-900 dark:text-amber-100">
+            Não encontramos “{debouncedQ.trim()}” em {region.city}. Exibindo
+            ofertas de outras cidades.
+          </p>
+        )}
+
       <OffersFiltersBar
-        categories={categories}
-        category={category}
-        q={q}
+        categories={categoryCatalog}
+        categorySlug={categorySlug}
+        q={qInput}
+        searchScope={searchScope}
+        sortBy={sortBy}
         favoritesOnly={favoritesOnly}
-        onCategoryChange={setCategory}
-        onQueryChange={setQ}
+        resultCount={data?.meta?.total ?? data?.offers.length}
+        isSearching={isSearchPending || (isFetching && Boolean(debouncedQ))}
+        onCategoryChange={setCategorySlug}
+        onQueryChange={handleQueryChange}
+        onSearchScopeChange={setSearchScope}
+        onSortChange={setSortBy}
         onFavoritesOnlyChange={setFavoritesOnly}
       />
 
       <AsyncPanel
-        isLoading={isLoading}
+        isLoading={isLoading || isSearchPending}
         error={error}
+        onRetry={() => void refetch()}
         loadingFallback={
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((item) => (

@@ -3,6 +3,9 @@
 import dynamic from "next/dynamic";
 import { useSyncExternalStore } from "react";
 
+import { BillingStatusBanner } from "@/components/shared/billing-status-banner";
+import { NetworkRecoveryListener } from "@/components/shared/network-recovery-listener";
+import { OfflineBanner } from "@/components/shared/offline-banner";
 import { usePantryItems } from "@/hooks/use-api";
 
 const OnboardingDialog = dynamic(
@@ -48,6 +51,9 @@ export function AppExperience({ children }: AppExperienceProps) {
       >
         Pular para o conteúdo
       </a>
+      <OfflineBanner />
+      <BillingStatusBanner />
+      <NetworkRecoveryListener />
       {children}
       {needsPantryCheck && <OnboardingDialog showWhenEmpty={pantryEmpty} />}
     </>

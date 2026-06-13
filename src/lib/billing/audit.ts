@@ -31,10 +31,11 @@ export async function markStripeWebhookProcessed(
   });
 
   if (error && error.code !== "23505") {
-    logger.warn("stripe.webhook.dedup_failed", {
+    logger.error("stripe.webhook.dedup_failed", {
       eventId,
       error: error.message,
     });
+    throw new Error("STRIPE_WEBHOOK_DEDUP_FAILED");
   }
 }
 

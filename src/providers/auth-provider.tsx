@@ -38,17 +38,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let mounted = true;
 
     supabase.auth
-      .getUser()
-      .then(async ({ data: { user }, error }) => {
-        if (!mounted) return;
-        if (error || !user) {
-          setSession(null);
-          setLoading(false);
-          return;
-        }
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
+      .getSession()
+      .then(({ data: { session: currentSession } }) => {
         if (!mounted) return;
         setSession(currentSession);
         setLoading(false);

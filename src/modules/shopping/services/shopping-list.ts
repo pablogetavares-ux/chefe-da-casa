@@ -11,12 +11,15 @@ import type {
   SmartShoppingListItem,
   SmartShoppingListResponse,
 } from "@/modules/shopping/types";
-import { DEFAULT_OFFER_CITY } from "@/modules/offers/types";
 import type { RegionalOffer } from "@/modules/offers/types";
 import {
   queryRegionalOffers,
   getOfferById,
 } from "@/modules/offers/services/offers";
+import { prioritizeMatchedOffers } from "@/modules/offers/services/integrations";
+import { fetchUserOfferContext } from "@/modules/offers/services/user-offer-context";
+import { getUserOfferRegion } from "@/modules/offers/services/region";
+import { buildUserOfferRegion } from "@/modules/offers/region/user-region";
 import { scoreOfferForRecipe } from "@/modules/offers/utils/matching";
 import type { Database } from "@/types/database";
 
@@ -139,15 +142,24 @@ export async function buildSmartShoppingResponse(
   userId: string,
   listId?: string | null,
 ): Promise<SmartShoppingListResponse> {
-  const list = await resolveShoppingList(supabase, userId, listId);
+  const [list, profileRegion, userContext] = await Promise.all([
+    resolveShoppingList(supabase, userId, listId),
+    getUserOfferRegion(supabase, userId),
+    fetchUserOfferContext(supabase, userId),
+  ]);
+  const region = buildUserOfferRegion(profileRegion);
   const items = await fetchShoppingListItems(supabase, list.id);
   const summary = computeShoppingSummary(items);
 
-  const offers = await queryRegionalOffers(supabase, {
-    userId,
-    city: DEFAULT_OFFER_CITY,
-    limit: 64,
-  });
+  const offers = prioritizeMatchedOffers(
+    await queryRegionalOffers(supabase, {
+      userId,
+      region,
+      scope: "within_radius",
+      limit: 72,
+    }),
+    userContext,
+  );
 
   const offerMatches = matchOffersToItems(items, offers);
   const potentialSavings = offerMatches.reduce(
@@ -160,6 +172,7 @@ export async function buildSmartShoppingResponse(
     items,
     summary: mergeSummaryPotential(summary, potentialSavings),
     offerMatches,
+    offerPersonalizationHint: userContext.personalizationReason,
   };
 }
 

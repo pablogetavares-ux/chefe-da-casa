@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import type { ScanResult } from "@/lib/ai/schemas/scan-output";
 import { assertPantryLimit } from "@/lib/billing/plan-limits";
 import { assertFoodScanPath } from "@/lib/security/storage-path";
 import { getFoodScanSignedUrl, toDataUrl } from "@/lib/storage/food-scans";
@@ -29,6 +30,38 @@ export async function resolveScanImageUrl(
   }
 
   throw new Error("INVALID_IMAGE_TYPE");
+}
+
+const SCAN_REUSE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+/** Reutiliza scan recente da mesma imagem para evitar chamada vision duplicada. */
+export async function loadRecentScanByStoragePath(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  storagePath: string,
+): Promise<ScanResult | null> {
+  const cutoff = new Date(Date.now() - SCAN_REUSE_MAX_AGE_MS).toISOString();
+
+  const { data, error } = await supabase
+    .from("ingredient_scans")
+    .select("detected_ingredients, scene_description")
+    .eq("user_id", userId)
+    .eq("storage_path", storagePath)
+    .gte("created_at", cutoff)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data?.detected_ingredients) return null;
+
+  const ingredients = data.detected_ingredients as ScanResult["ingredients"];
+  if (!Array.isArray(ingredients) || ingredients.length === 0) return null;
+
+  return {
+    ingredients,
+    sceneDescription: data.scene_description ?? "",
+    suggestions: [],
+  };
 }
 
 export async function addDetectedIngredientsToPantry(

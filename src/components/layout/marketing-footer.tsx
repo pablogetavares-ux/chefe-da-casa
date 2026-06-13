@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChefHat } from "lucide-react";
 
+import { MARKETING_LANDING } from "@/config/marketing-landing";
 import { siteConfig } from "@/config/site";
 
 export function MarketingFooter() {
@@ -16,22 +17,22 @@ export function MarketingFooter() {
               {siteConfig.name}
             </div>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              {siteConfig.description}
+              {MARKETING_LANDING.tagline}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-4">
             <div className="space-y-3">
               <p className="font-medium text-foreground">Produto</p>
               <div className="flex flex-col gap-2 text-muted-foreground">
-                <Link href="/pricing" className="hover:text-foreground">
-                  Planos
-                </Link>
-                <Link href="/#como-funciona" className="hover:text-foreground">
-                  Como funciona
-                </Link>
-                <Link href="/#faq" className="hover:text-foreground">
-                  FAQ
-                </Link>
+                {MARKETING_LANDING.nav.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="hover:text-foreground"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             </div>
             <div className="space-y-3">
@@ -53,6 +54,9 @@ export function MarketingFooter() {
                 </Link>
                 <Link href="/app/generate" className="hover:text-foreground">
                   Gerar receita
+                </Link>
+                <Link href="/app/offers" className="hover:text-foreground">
+                  Ofertas
                 </Link>
               </div>
             </div>

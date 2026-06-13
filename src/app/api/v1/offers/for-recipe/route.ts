@@ -4,11 +4,20 @@ import { requireAuthUser } from "@/lib/api/auth";
 import { createClient } from "@/lib/supabase/server";
 import { offerForRecipeQuerySchema } from "@/lib/validations";
 import { buildUserOfferRegion } from "@/modules/offers/region/user-region";
-import { queryOffersForRecipe } from "@/modules/offers/services/offers";
+import {
+  DEFAULT_OFFER_VERTICAL_SLUG,
+  fetchOfferCatalog,
+} from "@/modules/offers/services/catalog";
+import { prioritizeMatchedOffers } from "@/modules/offers/services/integrations";
+import {
+  queryOffersForRecipe,
+  queryRecipeHeroOffers,
+} from "@/modules/offers/services/offers";
 import {
   fetchOfferStoreCatalog,
   getUserOfferRegion,
 } from "@/modules/offers/services/region";
+import { fetchUserOfferContext } from "@/modules/offers/services/user-offer-context";
 import { DEFAULT_OFFER_CITY } from "@/modules/offers/types";
 
 export async function GET(request: Request) {
@@ -45,21 +54,42 @@ export async function GET(request: Request) {
     });
     const scope = parsed.data.scope ?? "within_radius";
 
-    const catalog = await fetchOfferStoreCatalog(supabase);
+    const [storeCatalog, offerCatalog, userContext] = await Promise.all([
+      fetchOfferStoreCatalog(supabase),
+      fetchOfferCatalog(supabase),
+      fetchUserOfferContext(supabase, user.id),
+    ]);
 
     const result = await queryOffersForRecipe(supabase, user.id, recipe, {
       region,
       scope,
       city: parsed.data.city,
-      stores: catalog.stores,
+      stores: storeCatalog.stores,
     });
 
-    const { cities, regionCities } = catalog;
+    const offers = prioritizeMatchedOffers(result.offers, userContext);
+    const supermarketVertical = offerCatalog.verticals.find(
+      (item) => item.slug === DEFAULT_OFFER_VERTICAL_SLUG,
+    );
+    const { heroOffers, heroMode } = await queryRecipeHeroOffers(
+      supabase,
+      user.id,
+      offers,
+      {
+        region,
+        scope,
+        stores: storeCatalog.stores,
+        verticalId: supermarketVertical?.id,
+      },
+    );
+    const { cities, regionCities } = storeCatalog;
 
     return apiSuccess({
       recipeId: recipe.id,
       recipeTitle: recipe.title,
-      offers: result.offers,
+      offers,
+      heroOffers: prioritizeMatchedOffers(heroOffers, userContext),
+      heroMode,
       hasIngredientMatches: result.hasIngredientMatches,
       matchScope: result.matchScope,
       city: region.city,
@@ -70,6 +100,14 @@ export async function GET(request: Request) {
       regionCities,
       ingredientNames: result.ingredientNames,
       alternateCities: result.alternateCities,
+      userContext: {
+        plan: userContext.plan,
+        fitnessGoal: userContext.fitnessGoal,
+        seniorMode: userContext.seniorMode,
+        priorityCategories: userContext.priorityCategories,
+        priorityLabels: userContext.priorityLabels,
+        personalizationReason: userContext.personalizationReason,
+      },
     });
   } catch (error) {
     return handleApiRouteError(

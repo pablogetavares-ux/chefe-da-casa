@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, ChefHat, Loader2, Send, Sparkles } from "lucide-react";
+import { Bot, ChefHat, Loader2, Send, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { ErrorFallback } from "@/components/shared/error-fallback";
 import { PageHeader } from "@/components/shared/page-header";
 import { AnimatedPage, FadeIn } from "@/components/shared/motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAiChat, useAiStatus } from "@/hooks/use-api";
+import { classifyClientError } from "@/lib/api/client-errors";
 import {
   notifyChatUpdated,
   saveChatSnapshot,
@@ -35,10 +37,60 @@ function createMessage(
   };
 }
 
+function ChatErrorBanner({
+  title,
+  message,
+  onRetry,
+  onDismiss,
+}: {
+  title: string;
+  message: string;
+  onRetry?: () => void;
+  onDismiss?: () => void;
+}) {
+  return (
+    <div className="surface-card flex items-start gap-3 border-destructive/30 bg-destructive/5 p-4">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-destructive">{title}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+        {onRetry && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={onRetry}
+          >
+            Tentar novamente
+          </Button>
+        )}
+      </div>
+      {onDismiss && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Fechar aviso"
+          onClick={onDismiss}
+        >
+          <X className="size-4" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function AiChatPanel() {
-  const { data: aiStatus } = useAiStatus();
+  const {
+    data: aiStatus,
+    isError: statusQueryError,
+    error: statusQueryErr,
+    refetch: refetchStatus,
+    isLoading: statusLoading,
+  } = useAiStatus();
   const chat = useAiChat();
   const [input, setInput] = useState("");
+  const [chatErrorDismissed, setChatErrorDismissed] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     createMessage(
       "assistant",
@@ -58,10 +110,18 @@ export function AiChatPanel() {
     const trimmed = text.trim();
     if (!trimmed || chat.isPending) return;
 
+    if (aiStatus?.configured === false) {
+      toast.error(
+        "Chat indisponível — configure a IA ou use o modo demonstração.",
+      );
+      return;
+    }
+
     const userMsg = createMessage("user", trimmed);
     const nextMessages = [...messages, userMsg];
     setMessages(nextMessages);
     setInput("");
+    setChatErrorDismissed(false);
 
     const payload = nextMessages
       .filter((m) => m.role === "user" || m.role === "assistant")
@@ -80,17 +140,43 @@ export function AiChatPanel() {
         updatedAt: new Date().toISOString(),
       });
       notifyChatUpdated();
-    } catch (err) {
+    } catch {
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setInput(trimmed);
-      toast.error(
-        err instanceof Error ? err.message : "Falha ao enviar mensagem.",
-      );
     }
   }
 
+  const statusErrorMessage = statusQueryError
+    ? classifyClientError(statusQueryErr).message
+    : null;
+
+  const chatErrorMessage = chat.isError
+    ? classifyClientError(chat.error).message
+    : null;
+
+  const aiUnavailable =
+    !statusLoading && aiStatus && aiStatus.configured === false;
+
+  if (statusQueryError && !aiStatus) {
+    return (
+      <AnimatedPage>
+        <PageHeader
+          title="Chat IA"
+          description="Converse com o Chef — dúvidas culinárias, substituições e ideias rápidas."
+        />
+        <ErrorFallback
+          title="Chat indisponível"
+          message={
+            statusErrorMessage ?? "Não foi possível verificar o serviço de IA."
+          }
+          reset={() => void refetchStatus()}
+        />
+      </AnimatedPage>
+    );
+  }
+
   return (
-    <AnimatedPage className="flex min-h-[calc(100dvh-12rem)] flex-col md:min-h-[calc(100dvh-8rem)]">
+    <AnimatedPage className="flex min-h-[calc(100dvh-12rem-env(safe-area-inset-bottom))] flex-col gap-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:min-h-[calc(100dvh-8rem)] md:pb-0">
       <PageHeader
         title="Chat IA"
         description="Converse com o Chef — dúvidas culinárias, substituições e ideias rápidas."
@@ -104,6 +190,26 @@ export function AiChatPanel() {
             para chat real.
           </div>
         </FadeIn>
+      )}
+
+      {aiUnavailable && (
+        <ChatErrorBanner
+          title="IA não configurada"
+          message="O chat está desativado neste ambiente. Ative OPENAI_API_KEY ou AI_DEV_MOCK para usar o assistente."
+          onRetry={() => void refetchStatus()}
+        />
+      )}
+
+      {chat.isError && !chatErrorDismissed && chatErrorMessage && (
+        <ChatErrorBanner
+          title="Falha ao enviar mensagem"
+          message={chatErrorMessage}
+          onRetry={() => {
+            chat.reset();
+            setChatErrorDismissed(false);
+          }}
+          onDismiss={() => setChatErrorDismissed(true)}
+        />
       )}
 
       <div className="surface-card flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -168,6 +274,7 @@ export function AiChatPanel() {
                 variant="outline"
                 size="sm"
                 className="text-xs"
+                disabled={aiUnavailable || chat.isPending}
                 onClick={() => sendMessage(prompt)}
               >
                 {prompt}
@@ -191,6 +298,7 @@ export function AiChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             rows={1}
             className="min-h-10 resize-none"
+            disabled={aiUnavailable}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -202,7 +310,7 @@ export function AiChatPanel() {
             type="submit"
             size="icon"
             className="shrink-0 self-end"
-            disabled={!input.trim() || chat.isPending}
+            disabled={!input.trim() || chat.isPending || aiUnavailable}
             aria-label="Enviar mensagem"
           >
             <Send className="size-4" />

@@ -1,3 +1,5 @@
+import { parseUuidParam } from "@/lib/api/route-params";
+import { throwIfSupabaseError } from "@/lib/api/supabase-errors";
 import { apiError, apiSuccess } from "@/lib/api/response";
 import { handleApiRouteError } from "@/lib/api/route-error";
 import { requireAuthUser } from "@/lib/api/auth";
@@ -15,7 +17,12 @@ function toExpiresAt(value?: string | null) {
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const user = await requireAuthUser();
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idParsed = parseUuidParam(rawId, "Item");
+    if (!idParsed.ok) {
+      return apiError(idParsed.message, 400, "VALIDATION_ERROR");
+    }
+    const id = idParsed.id;
     const body = await request.json();
     const parsed = pantryItemUpdateSchema.safeParse(body);
 
@@ -63,9 +70,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       .select()
       .single();
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    if (error) throw error;
 
     if (!data) {
       return apiError("Item não encontrado", 404);
@@ -80,7 +85,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const user = await requireAuthUser();
-    const { id } = await params;
+    const { id: rawId } = await params;
+    const idParsed = parseUuidParam(rawId, "Item");
+    if (!idParsed.ok) {
+      return apiError(idParsed.message, 400, "VALIDATION_ERROR");
+    }
+    const id = idParsed.id;
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -89,9 +99,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       .eq("id", id)
       .eq("user_id", user.id);
 
-    if (error) {
-      return apiError(error.message, 500);
-    }
+    throwIfSupabaseError(error);
 
     return apiSuccess({ id });
   } catch (error) {

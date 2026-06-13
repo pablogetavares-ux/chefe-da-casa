@@ -5,7 +5,7 @@ import { siteConfig } from "@/config/site";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: siteConfig.name,
-    short_name: "Chef da Casa",
+    short_name: "Chefe da Casa",
     description: siteConfig.description,
     start_url: "/app",
     display: "standalone",

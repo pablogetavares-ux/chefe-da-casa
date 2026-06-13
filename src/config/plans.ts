@@ -16,6 +16,8 @@ export const PLANS = {
       "5 receitas geradas por mês",
       "Despensa básica",
       "Salvar até 10 receitas",
+      "Ofertas regionais (supermercados)",
+      "Lista de compras com promoções",
     ],
   },
   pro: {
@@ -34,6 +36,8 @@ export const PLANS = {
       "Despensa ampliada (200 itens)",
       "Receitas personalizadas por dieta",
       "Modo fitness e anti-desperdício",
+      "Ofertas priorizadas por perfil fitness",
+      "Comparador de preços avançado",
     ],
   },
   family: {
@@ -50,6 +54,7 @@ export const PLANS = {
       "Tudo do Pro",
       "600 gerações de IA por mês",
       "Receitas e despensa ilimitadas",
+      "Ofertas com prioridade familiar",
       "Suporte prioritário",
     ],
   },
@@ -57,3 +62,25 @@ export const PLANS = {
 
 export type PlanId = keyof typeof PLANS;
 export type Plan = (typeof PLANS)[PlanId];
+
+/** Rótulo amigável para enum/tier vindo do banco (FREE, pro, etc.). */
+export function formatPlanDisplayName(plan: string): string {
+  const key = plan.toLowerCase() as PlanId;
+  return PLANS[key]?.name ?? plan;
+}
+
+const BRAZIL_TZ = "America/Sao_Paulo";
+
+/** Período do dia no fuso BR — usar no servidor para evitar hydration mismatch. */
+export function getDayPeriodInBrazil(now = new Date()): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: BRAZIL_TZ,
+    }).format(now),
+  );
+  if (hour < 12) return "Bom dia";
+  if (hour < 18) return "Boa tarde";
+  return "Boa noite";
+}

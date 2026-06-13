@@ -46,6 +46,7 @@ export type SmartShoppingListResponse = {
   items: SmartShoppingListItem[];
   summary: ShoppingListSummary;
   offerMatches: ShoppingOfferMatch[];
+  offerPersonalizationHint?: string | null;
 };
 
 export type ShoppingListsResponse = {

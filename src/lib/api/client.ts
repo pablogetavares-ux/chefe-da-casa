@@ -23,7 +23,15 @@ import type {
   ShoppingListItemInput,
   ShoppingListItemUpdateInput,
 } from "@/lib/validations";
+import type { BillingHealth } from "@/lib/billing/subscription-state";
+import {
+  ApiClientError,
+  networkErrorMessage,
+  timeoutErrorMessage,
+} from "@/lib/api/client-errors";
 import { getSafeRedirectPath } from "@/lib/auth/redirect";
+
+export { ApiClientError } from "@/lib/api/client-errors";
 
 export class UnauthorizedError extends Error {
   constructor(message = "Não autenticado") {
@@ -141,6 +149,7 @@ export type GenerateShoppingListResponse =
 export type BillingSubscriptionResponse = {
   plan: string;
   subscription: Subscription | null;
+  billingHealth: BillingHealth;
 };
 
 export type PlanUsageSummary = {
@@ -159,19 +168,39 @@ export type BillingUrlResponse = {
 type FetchApiOptions = RequestInit & {
   /** Evita redirect imediato (ex.: query aguardando sessão no client). */
   redirectOnUnauthorized?: boolean;
+  /** Timeout da requisição em ms (padrão 30s). */
+  timeoutMs?: number;
 };
 
-async function fetchApi<T>(url: string, init?: FetchApiOptions): Promise<T> {
-  const { redirectOnUnauthorized = true, ...requestInit } = init ?? {};
+const DEFAULT_FETCH_TIMEOUT_MS = 30_000;
 
-  const res = await fetch(url, {
-    ...requestInit,
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-      ...requestInit.headers,
-    },
-  });
+async function fetchApi<T>(url: string, init?: FetchApiOptions): Promise<T> {
+  const {
+    redirectOnUnauthorized = true,
+    timeoutMs = DEFAULT_FETCH_TIMEOUT_MS,
+    ...requestInit
+  } = init ?? {};
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...requestInit,
+      credentials: "same-origin",
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: {
+        "Content-Type": "application/json",
+        ...requestInit.headers,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "TimeoutError" || error.name === "AbortError")
+    ) {
+      throw new ApiClientError(timeoutErrorMessage(), "TIMEOUT");
+    }
+    throw new ApiClientError(networkErrorMessage(), "NETWORK_ERROR");
+  }
 
   if (res.status === 401) {
     if (redirectOnUnauthorized) {
@@ -180,10 +209,29 @@ async function fetchApi<T>(url: string, init?: FetchApiOptions): Promise<T> {
     throw new UnauthorizedError();
   }
 
-  const json = (await res.json()) as ApiResponse<T>;
+  let json: ApiResponse<T>;
+  try {
+    json = (await res.json()) as ApiResponse<T>;
+  } catch {
+    throw new ApiClientError(
+      res.ok
+        ? "Resposta inválida do servidor."
+        : `Erro ${res.status}: serviço indisponível.`,
+      "INVALID_RESPONSE",
+      res.status,
+    );
+  }
 
   if (!json.success) {
-    throw new Error(json.error);
+    throw new ApiClientError(
+      json.error ?? `Erro ${res.status}`,
+      json.code,
+      res.status,
+    );
+  }
+
+  if (!res.ok) {
+    throw new ApiClientError(`Erro ${res.status}`, undefined, res.status);
   }
 
   return json.data;
@@ -505,13 +553,21 @@ export const api = {
     },
   },
   offers: {
+    getHub: () =>
+      fetchApi<import("@/modules/offers/types").OffersHubResponse>(
+        "/api/v1/offers/hub",
+      ),
     list: (params?: {
       city?: string;
       state?: string;
       radiusKm?: number;
       scope?: import("@/modules/offers/region/types").OfferRegionScope;
+      verticalSlug?: string;
+      categorySlug?: string;
       category?: string;
       q?: string;
+      searchScope?: import("@/modules/offers/utils/search").OfferSearchScope;
+      sortBy?: import("@/modules/offers/utils/search").OfferSortBy;
       favoritesOnly?: boolean;
     }) => {
       const search = new URLSearchParams();
@@ -519,8 +575,12 @@ export const api = {
       if (params?.state) search.set("state", params.state);
       if (params?.radiusKm) search.set("radiusKm", String(params.radiusKm));
       if (params?.scope) search.set("scope", params.scope);
+      if (params?.verticalSlug) search.set("verticalSlug", params.verticalSlug);
+      if (params?.categorySlug) search.set("categorySlug", params.categorySlug);
       if (params?.category) search.set("category", params.category);
       if (params?.q) search.set("q", params.q);
+      if (params?.searchScope) search.set("searchScope", params.searchScope);
+      if (params?.sortBy) search.set("sortBy", params.sortBy);
       if (params?.favoritesOnly) search.set("favoritesOnly", "true");
       const query = search.toString();
       return fetchApi<import("@/modules/offers/types").OffersListResponse>(
@@ -557,6 +617,52 @@ export const api = {
         `/api/v1/offers/for-recipe?${search.toString()}`,
       );
     },
+    forPantry: (options?: {
+      city?: string;
+      state?: string;
+      radiusKm?: number;
+    }) => {
+      const search = new URLSearchParams();
+      if (options?.city) search.set("city", options.city);
+      if (options?.state) search.set("state", options.state);
+      if (options?.radiusKm) search.set("radiusKm", String(options.radiusKm));
+      const query = search.toString();
+      return fetchApi<import("@/modules/offers/types").PantryOffersResponse>(
+        `/api/v1/offers/for-pantry${query ? `?${query}` : ""}`,
+      );
+    },
+    getIntegrationContext: () =>
+      fetchApi<
+        import("@/modules/offers/types").OffersIntegrationContextResponse
+      >("/api/v1/offers/context"),
+    forAntiWaste: (options?: {
+      city?: string;
+      state?: string;
+      radiusKm?: number;
+    }) => {
+      const search = new URLSearchParams();
+      if (options?.city) search.set("city", options.city);
+      if (options?.state) search.set("state", options.state);
+      if (options?.radiusKm) search.set("radiusKm", String(options.radiusKm));
+      const query = search.toString();
+      return fetchApi<
+        import("@/modules/offers/types").IngredientOffersResponse
+      >(`/api/v1/offers/for-anti-waste${query ? `?${query}` : ""}`);
+    },
+    forIngredients: (body: {
+      names: string[];
+      context?: "weekly_plan" | "ingredients";
+      city?: string;
+      state?: string;
+      radiusKm?: number;
+    }) =>
+      fetchApi<import("@/modules/offers/types").IngredientOffersResponse>(
+        "/api/v1/offers/for-ingredients",
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
     addFavorite: (offerId: string) =>
       fetchApi<{ id: string; offerId: string }>("/api/v1/offers/favorites", {
         method: "POST",

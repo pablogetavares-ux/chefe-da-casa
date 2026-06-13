@@ -23,7 +23,21 @@ export function shoppingListQueryKey(listId?: string) {
 }
 
 export const OFFERS_QUERY_PREFIX = "offers" as const;
+export const OFFERS_HUB_QUERY_KEY = ["offers", "hub"] as const;
 export const OFFERS_FOR_RECIPE_QUERY_PREFIX = "offers-for-recipe" as const;
+export const OFFERS_FOR_PANTRY_QUERY_KEY = ["offers", "for-pantry"] as const;
+export const OFFERS_FOR_ANTI_WASTE_QUERY_KEY = [
+  "offers",
+  "for-anti-waste",
+] as const;
+export const OFFERS_FOR_INGREDIENTS_QUERY_PREFIX = [
+  "offers",
+  "for-ingredients",
+] as const;
+export const OFFERS_INTEGRATION_CONTEXT_QUERY_KEY = [
+  "offers",
+  "integration-context",
+] as const;
 export const OFFERS_REGION_QUERY_KEY = ["offers", "region"] as const;
 export const PRICING_COMPARE_QUERY_PREFIX = "pricing-compare" as const;
 export const MARKETS_COMPARE_QUERY_PREFIX = "markets-compare" as const;
@@ -82,6 +96,17 @@ export const PANTRY_INVALIDATION = [
 export const OFFERS_INVALIDATION = [
   [OFFERS_QUERY_PREFIX],
   [OFFERS_FOR_RECIPE_QUERY_PREFIX],
+] as const;
+
+export const OFFERS_FULL_INVALIDATION = [
+  [OFFERS_QUERY_PREFIX],
+  [OFFERS_FOR_RECIPE_QUERY_PREFIX],
+  OFFERS_HUB_QUERY_KEY,
+  OFFERS_FOR_PANTRY_QUERY_KEY,
+  OFFERS_FOR_ANTI_WASTE_QUERY_KEY,
+  OFFERS_FOR_INGREDIENTS_QUERY_PREFIX,
+  OFFERS_INTEGRATION_CONTEXT_QUERY_KEY,
+  OFFERS_REGION_QUERY_KEY,
 ] as const;
 
 export const OFFERS_SHOPPING_INVALIDATION = [

@@ -129,7 +129,7 @@ export function SmartShoppingPanel() {
         </Link>
         <Link href="/app/offers">
           <Button variant="outline" size="sm">
-            Ofertas regionais
+            Central de Ofertas
           </Button>
         </Link>
         <Link
@@ -170,6 +170,7 @@ export function SmartShoppingPanel() {
         <ShoppingOfferMatches
           matches={data.offerMatches}
           linking={linkOffer.isPending}
+          personalizationHint={data.offerPersonalizationHint}
           onLink={(itemId, offerId) => linkOffer.mutate({ itemId, offerId })}
         />
       )}

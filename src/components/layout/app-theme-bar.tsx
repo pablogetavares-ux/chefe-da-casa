@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 export function AppThemeBar() {
   return (
     <div
-      className="sticky top-0 z-50 flex w-full shrink-0 items-center justify-end border-b bg-background/95 px-4 py-2 backdrop-blur-md"
+      className="sticky top-0 z-50 hidden w-full shrink-0 items-center justify-end border-b bg-background/95 px-4 py-2 backdrop-blur-md md:flex"
       role="toolbar"
       aria-label="Aparência"
     >

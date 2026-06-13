@@ -1,5 +1,6 @@
 import { apiError } from "@/lib/api/response";
 import { requireAuthUser } from "@/lib/api/auth";
+import { assertPremiumRecipeMode } from "@/lib/billing/assert-premium";
 import {
   assertAiGenerationAllowed,
   assertRecipesPerMonthLimit,
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
 
     const usage = await assertAiGenerationAllowed(user.id);
     await assertRecipesPerMonthLimit(user.id);
+    await assertPremiumRecipeMode(user.id, parsed.data.mode);
     const supabase = await createClient();
     const profile = await getProfileBodyFields(supabase, user.id);
     const input = enrichGenerateRecipeInput(parsed.data, profile);

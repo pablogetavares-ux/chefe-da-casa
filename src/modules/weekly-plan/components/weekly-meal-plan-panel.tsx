@@ -29,6 +29,7 @@ import type { WeeklyPlanResult } from "@/lib/weekly-plan/compute-weekly-plan";
 import { WEEKLY_PLAN_GOAL_LABELS } from "@/lib/weekly-plan/meal-templates";
 import type { WeeklyPlanGoal } from "@/lib/weekly-plan/meal-templates";
 import { cn } from "@/lib/utils";
+import { WeeklyPlanOffersSection } from "@/modules/offers/components/weekly-plan-offers-section";
 import { api } from "@/lib/api/client";
 import { useGenerateWeeklyPlan } from "@/shared/hooks/api/weekly-plan";
 import { useSmartShopping } from "@/shared/hooks/api/shopping";
@@ -330,6 +331,10 @@ export function WeeklyMealPlanPanel() {
               </div>
             </section>
           )}
+
+          <WeeklyPlanOffersSection
+            ingredientNames={plan.shoppingList.items.map((item) => item.name)}
+          />
 
           <section className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">

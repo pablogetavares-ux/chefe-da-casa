@@ -8,13 +8,19 @@ import { recipesListQuerySchema } from "@/lib/validations/recipes-list";
 export async function GET(request: Request) {
   try {
     const user = await requireAuthUser(request);
-    const supabase = await createClient();
+    const supabase = await createClient(request);
 
     const { searchParams } = new URL(request.url);
-    const query = recipesListQuerySchema.parse({
+    const parsed = recipesListQuerySchema.safeParse({
       page: searchParams.get("page") ?? undefined,
       limit: searchParams.get("limit") ?? undefined,
     });
+
+    if (!parsed.success) {
+      return handleApiRouteError(parsed.error, "GET /api/v1/recipes");
+    }
+
+    const query = parsed.data;
 
     const from = (query.page - 1) * query.limit;
     const to = from + query.limit - 1;

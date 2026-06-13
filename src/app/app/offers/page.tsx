@@ -5,27 +5,32 @@ import { AnimatedPage } from "@/components/shared/motion";
 import { PageHeader } from "@/components/shared/page-header";
 import { PanelSkeleton } from "@/components/shared/panel-skeleton";
 
-const OffersPanel = dynamic(
+const OffersHub = dynamic(
   () =>
-    import("@/modules/offers/components/offers-panel").then(
-      (mod) => mod.OffersPanel,
+    import("@/modules/offers/components/offers-hub").then(
+      (mod) => mod.OffersHub,
     ),
-  { loading: () => <PanelSkeleton rows={4} label="Carregando ofertas..." /> },
+  {
+    loading: () => (
+      <PanelSkeleton rows={4} label="Carregando central de ofertas..." />
+    ),
+  },
 );
 
 export const metadata: Metadata = {
-  title: "Ofertas regionais",
-  description: "Promoções de supermercados na sua cidade.",
+  title: "Central de Ofertas",
+  description:
+    "Supermercados, farmácias, pet shop e mais — promoções na sua região.",
 };
 
 export default function OffersPage() {
   return (
     <AnimatedPage>
       <PageHeader
-        title="Ofertas regionais"
-        description="Promoções de mercados perto de você — adicione direto à lista de compras."
+        title="Ofertas"
+        description="Escolha uma categoria e encontre promoções perto de você."
       />
-      <OffersPanel />
+      <OffersHub />
     </AnimatedPage>
   );
 }
